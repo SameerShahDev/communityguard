@@ -1,0 +1,58 @@
+npm verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+npm info using npm@10.9.2
+npm info using node@v22.17.0
+npm verbose title npm install @tailwindcss/postcss@latest postcss tailwindcss@latest
+npm verbose argv "install" "--save-dev" "@tailwindcss/postcss@latest" "postcss" "tailwindcss@latest" "--force" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:C:\Users\SAMEER KHAN\AppData\Local\npm-cache\_logs\2026-04-03T08_58_45_073Z-
+npm verbose logfile C:\Users\SAMEER KHAN\AppData\Local\npm-cache\_logs\2026-04-03T08_58_45_073Z-debug-0.log
+npm warn using --force Recommended protections disabled.
+npm http fetch GET 200 https://registry.npmjs.org/@tailwindcss%2fpostcss 683ms (cache miss)
+npm http fetch GET 200 https://registry.npmjs.org/tailwindcss 1960ms (cache miss)
+npm warn idealTree Removing dependencies.postcss in favor of devDependencies.postcss
+npm http fetch GET 200 https://registry.npmjs.org/@tailwindcss%2fpostcss 488ms (cache miss)
+npm http fetch GET 200 https://registry.npmjs.org/tailwindcss 1044ms (cache miss)
+npm http fetch GET 200 https://registry.npmjs.org/postcss 288ms (cache miss)
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-win32-arm64-msvc
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-linux-x64-musl
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-linux-x64-gnu
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-linux-arm64-musl
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-linux-arm64-gnu
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-darwin-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@next\swc-darwin-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-win32-ia32
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-win32-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-wasm32
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linuxmusl-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linuxmusl-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linux-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linux-s390x
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linux-riscv64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linux-ppc64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linux-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-linux-arm
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linuxmusl-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linuxmusl-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linux-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linux-s390x
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linux-riscv64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linux-ppc64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linux-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-linux-arm
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-darwin-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-libvips-darwin-arm64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-darwin-x64
+npm verbose reify failed optional dependency A:\igone\communityguard\node_modules\@img\sharp-darwin-arm64
+npm http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 390ms
+
+up to date, audited 461 packages in 5s
+
+127 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm verbose cwd A:\igone\communityguard
+npm verbose os Windows_NT 10.0.26100
+npm verbose node v22.17.0
+npm verbose npm  v10.9.2
+npm verbose exit 0
+npm info ok
