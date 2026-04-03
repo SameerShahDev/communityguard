@@ -1,10 +1,7 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { handlePaidReferral } from '@/lib/referral';
-import { createClient } from '@/lib/supabase/server';
+export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia', // use latest
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
+  apiVersion: '2025-02-24.acacia',
 });
 
 export async function POST(req: Request) {
