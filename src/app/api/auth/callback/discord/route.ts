@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   const { searchParams, origin } = new URL(req.url);
   const code = searchParams.get('code');
@@ -38,9 +40,10 @@ export async function GET(req: Request) {
     .from('communities')
     .upsert({
       user_id: user.id,
-      discord_server_id: guildId,
-      name: serverName
-    }, { onConflict: 'discord_server_id' });
+      guild_id: guildId,
+      guild_name: serverName,
+      is_active: true
+    }, { onConflict: 'guild_id' });
 
   if (error) {
     console.error("Error saving community", error);
