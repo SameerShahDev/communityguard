@@ -5,6 +5,7 @@ export const runtime = 'edge';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 import { 
   getAdminStats, 
   getAdminSettings, 
@@ -17,12 +18,38 @@ export default function AdminPanel() {
   const [stats, setStats] = useState({ mrr: 0, proUsers: 0, trialUsers: 0 });
   const [settings, setSettings] = useState({ referral_active: true, maintenance_mode: false, pro_price: 3500 });
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [manualInput, setManualInput] = useState({ id: '', days: 30, reason: 'GPay payment' });
   const [giftInput, setGiftInput] = useState({ code: '', uses: 50 });
 
   useEffect(() => {
-    async function loadData() {
+    async function checkAdminAndLoad() {
       try {
+        const supabase = createClient();
+        
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          window.location.href = '/login';
+          return;
+        }
+
+        // Check if user is admin
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+
+        if (userError || !userData?.is_admin) {
+          console.log('User is not admin, redirecting...');
+          window.location.href = '/dashboard';
+          return;
+        }
+
+        setIsAdmin(true);
+
+        // Load admin data
         const [statsRes, settingsRes] = await Promise.all([
           getAdminStats(),
           getAdminSettings()
@@ -36,7 +63,7 @@ export default function AdminPanel() {
         setIsLoading(false);
       }
     }
-    loadData();
+    checkAdminAndLoad();
   }, []);
 
   const handleToggleReferral = async () => {
@@ -94,6 +121,18 @@ export default function AdminPanel() {
   };
   
   if (isLoading) return <div className="min-h-screen bg-[#0c0e12] flex items-center justify-center text-white">Loading Admin...</div>;
+
+  if (!isAdmin) return (
+    <div className="min-h-screen bg-[#0c0e12] flex items-center justify-center text-white">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+        <p className="text-slate-400 mb-6">You do not have permission to access this page.</p>
+        <Link href="/dashboard" className="px-6 py-3 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold rounded-xl">
+          Go to Dashboard
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#0c0e12] text-[#f6f6fc] font-sans flex flex-col md:flex-row">

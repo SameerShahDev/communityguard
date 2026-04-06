@@ -250,13 +250,6 @@ export default function DashboardPage() {
             <div className="bg-[#111318] border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Link href="/admin" className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                  <span className="w-10 h-10 bg-[#5865F2]/20 rounded-lg flex items-center justify-center text-lg">⚙️</span>
-                  <div>
-                    <p className="font-semibold">Admin Panel</p>
-                    <p className="text-sm text-slate-400">Manage settings & users</p>
-                  </div>
-                </Link>
                 <Link href="/dashboard/referrals" className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
                   <span className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center text-lg">🎁</span>
                   <div>
