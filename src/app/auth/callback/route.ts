@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createEdgeClient } from '@/lib/supabase/edge'
 
-// Edge Runtime for Cloudflare Pages compatibility
 export const runtime = 'edge';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
@@ -18,33 +16,72 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${SITE_URL}/login?error=no_code`)
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  
   try {
-    // Use Supabase client to exchange the code for a session
-    const supabase = createEdgeClient()
+    // Get cookies from request
+    const cookieHeader = request.headers.get('cookie') || ''
+    const cookies = Object.fromEntries(
+      cookieHeader.split(';').map(c => c.trim().split('=')).filter(([k]) => k)
+    )
     
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    // Get PKCE code verifier from cookie
+    const codeVerifier = cookies['sb-code-verifier'] || cookies['supabase-auth-code-verifier']
     
-    if (error || !data.session) {
-      console.error('Token exchange failed:', error?.message || 'No session returned')
+    console.log('Code verifier present:', !!codeVerifier)
+
+    // Exchange code for session using Supabase auth API with PKCE
+    const tokenUrl = new URL(`${supabaseUrl}/auth/v1/token`)
+    tokenUrl.searchParams.set('grant_type', 'pkce')
+    
+    const requestBody: Record<string, string> = {
+      auth_code: code,
+      redirect_uri: `${SITE_URL}/auth/callback`
+    }
+    
+    if (codeVerifier) {
+      requestBody.code_verifier = codeVerifier
+    }
+    
+    const authRes = await fetch(tokenUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify(requestBody)
+    })
+    
+    console.log('Token exchange status:', authRes.status)
+    
+    if (!authRes.ok) {
+      const errorData = await authRes.text()
+      console.error('Token exchange failed:', errorData)
       return NextResponse.redirect(`${SITE_URL}/login?error=token_exchange_failed`)
     }
-
-    const { session, user } = data
     
-    if (!user || !session.access_token) {
+    const authData = await authRes.json()
+    console.log('Token exchange successful, user:', authData.user?.id)
+    
+    const { access_token, refresh_token, user } = authData
+    
+    if (!user || !access_token) {
       console.error('Missing user or access token in response')
       return NextResponse.redirect(`${SITE_URL}/login?error=invalid_token_response`)
     }
 
-    console.log('Token exchange successful, user:', user.id)
-
     // Save user to database
     try {
+      const { createEdgeClient } = await import('@/lib/supabase/edge')
+      const edgeSupabase = createEdgeClient()
+      
       const discord_id = user.user_metadata?.provider_id || 
                         user.user_metadata?.sub || 
                         user.identities?.find((i: any) => i.provider === 'discord')?.id;
       
-      await supabase
+      await edgeSupabase
         .from('users')
         .upsert({
           id: user.id,
@@ -57,31 +94,32 @@ export async function GET(request: Request) {
       console.log('User saved to database:', user.id)
     } catch (dbError) {
       console.error('Database error (non-fatal):', dbError)
-      // Continue even if DB fails - user can still be authenticated
     }
 
     // Create response with redirect
     const response = NextResponse.redirect(`${SITE_URL}${next}`)
     
-    // Set cookies with proper options for production
+    // Set cookies
     const isSecure = SITE_URL.startsWith('https://')
     const cookieOptions = {
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax' as const,
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: '/'
     }
     
-    // Primary auth cookie
-    response.cookies.set('sb-access-token', session.access_token, cookieOptions)
+    response.cookies.set('sb-access-token', access_token, cookieOptions)
     
-    // Refresh token
-    if (session.refresh_token) {
-      response.cookies.set('sb-refresh-token', session.refresh_token, cookieOptions)
+    if (refresh_token) {
+      response.cookies.set('sb-refresh-token', refresh_token, cookieOptions)
     }
     
-    // Session indicator for client-side checks (not httpOnly)
+    // Clear code verifier cookie
+    if (codeVerifier) {
+      response.cookies.set('sb-code-verifier', '', { maxAge: 0, path: '/' })
+    }
+    
     response.cookies.set('sb-session', 'active', {
       secure: isSecure,
       sameSite: 'lax' as const,
