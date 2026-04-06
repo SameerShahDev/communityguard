@@ -121,21 +121,44 @@ export async function connectDiscord() {
 }
 
 export async function sendRecoveryEmails() {
-  const cookieStore = (await import('next/headers')).cookies();
-  const origin = (await (await import('next/headers')).headers()).get('origin') || "http://localhost:3000";
-  
   try {
-    const res = await fetch(`${origin}/api/churn/send-emails`, {
+    const res = await fetch('/api/emails/send-recovery', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       }
     });
     
-    if (!res.ok) throw new Error("Failed to send emails");
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to send emails");
+    }
     
     return await res.json();
-  } catch (error: unknown) {
-    return { error: error instanceof Error ? error.message : "Failed to send emails" };
+  } catch (error: any) {
+    console.error("Send recovery emails error:", error);
+    return { error: error.message || "Failed to send emails", sent: 0, recovered: 0 };
+  }
+}
+
+export async function createStripeCheckout() {
+  try {
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to create checkout");
+    }
+    
+    const data = await res.json();
+    return { url: data.url, error: null };
+  } catch (error: any) {
+    console.error("Stripe checkout error:", error);
+    return { url: null, error: error.message || "Failed to create checkout session" };
   }
 }

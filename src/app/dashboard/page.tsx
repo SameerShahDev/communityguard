@@ -6,7 +6,7 @@ export const runtime = 'edge';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails } from './actions';
+import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails, createStripeCheckout } from './actions';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
@@ -34,20 +34,35 @@ export default function DashboardPage() {
   const [sendResult, setSendResult] = useState<{sent: number, recovered: number} | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | null>(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Check for URL params from Discord callback
+    // Check for URL params from Discord callback and payment
     const success = searchParams.get('success');
     const error = searchParams.get('error');
+    const payment = searchParams.get('payment');
     
     if (success === 'server_connected') {
       setConnectSuccess('Discord server connected successfully!');
-      // Clear the URL params
       window.history.replaceState({}, '', '/dashboard');
     } else if (error) {
       setConnectError(`Connection failed: ${error}`);
+      window.history.replaceState({}, '', '/dashboard');
+    }
+    
+    // Handle payment status
+    if (payment === 'success') {
+      setPaymentStatus('success');
+      setConnectSuccess('🎉 Payment successful! You are now Pro!');
+      window.history.replaceState({}, '', '/dashboard');
+      // Refresh data to get updated pro status
+      setTimeout(() => window.location.reload(), 2000);
+    } else if (payment === 'cancelled') {
+      setPaymentStatus('cancelled');
+      setConnectError('Payment was cancelled. You can try again anytime.');
       window.history.replaceState({}, '', '/dashboard');
     }
   }, [searchParams]);
@@ -86,6 +101,24 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Discord connect error:", error);
       setConnectError("Failed to connect to Discord. Please try again.");
+    }
+  };
+
+  const handleUpgradeToPro = async () => {
+    setIsUpgrading(true);
+    setConnectError(null);
+    try {
+      const result = await createStripeCheckout();
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        setConnectError(result.error || "Failed to start checkout");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      setConnectError("Failed to start payment. Please try again.");
+    } finally {
+      setIsUpgrading(false);
     }
   };
 
