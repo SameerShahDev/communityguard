@@ -3,6 +3,8 @@ import Stripe from 'stripe';
 import { handlePaidReferral } from '@/lib/referral';
 import { createClient } from '@/lib/supabase/server';
 
+export const runtime = 'edge';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2025-02-24.acacia',
 });
