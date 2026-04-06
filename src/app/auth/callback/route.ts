@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createEdgeClient } from '@/lib/supabase/edge'
 
 // Edge Runtime for Cloudflare Pages compatibility
 export const runtime = 'edge';
@@ -17,57 +18,33 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${SITE_URL}/login?error=no_code`)
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
   try {
-    // Step 1: Exchange Discord OAuth code for Supabase session
-    // This endpoint exchanges the external provider code for a Supabase session
-    const tokenUrl = new URL(`${supabaseUrl}/auth/v1/token`)
-    tokenUrl.searchParams.set('grant_type', 'authorization_code')
+    // Use Supabase client to exchange the code for a session
+    const supabase = createEdgeClient()
     
-    const authRes = await fetch(tokenUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`
-      },
-      body: JSON.stringify({ 
-        code: code,
-        redirect_uri: `${SITE_URL}/auth/callback`
-      })
-    })
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    // Log the response status for debugging
-    console.log('Token exchange response status:', authRes.status)
-    
-    if (!authRes.ok) {
-      const errorData = await authRes.text()
-      console.error('Token exchange failed:', errorData)
+    if (error || !data.session) {
+      console.error('Token exchange failed:', error?.message || 'No session returned')
       return NextResponse.redirect(`${SITE_URL}/login?error=token_exchange_failed`)
     }
+
+    const { session, user } = data
     
-    const authData = await authRes.json()
-    console.log('Token exchange successful, user:', authData.user?.id)
-    
-    const { access_token, refresh_token, user } = authData
-    
-    if (!user || !access_token) {
+    if (!user || !session.access_token) {
       console.error('Missing user or access token in response')
       return NextResponse.redirect(`${SITE_URL}/login?error=invalid_token_response`)
     }
 
-    // Step 2: Save user to database
+    console.log('Token exchange successful, user:', user.id)
+
+    // Save user to database
     try {
-      const { createEdgeClient } = await import('@/lib/supabase/edge')
-      const edgeSupabase = createEdgeClient()
-      
       const discord_id = user.user_metadata?.provider_id || 
                         user.user_metadata?.sub || 
                         user.identities?.find((i: any) => i.provider === 'discord')?.id;
       
-      await edgeSupabase
+      await supabase
         .from('users')
         .upsert({
           id: user.id,
@@ -83,7 +60,7 @@ export async function GET(request: Request) {
       // Continue even if DB fails - user can still be authenticated
     }
 
-    // Step 3: Create response with cookies
+    // Create response with redirect
     const response = NextResponse.redirect(`${SITE_URL}${next}`)
     
     // Set cookies with proper options for production
@@ -97,11 +74,11 @@ export async function GET(request: Request) {
     }
     
     // Primary auth cookie
-    response.cookies.set('sb-access-token', access_token, cookieOptions)
+    response.cookies.set('sb-access-token', session.access_token, cookieOptions)
     
     // Refresh token
-    if (refresh_token) {
-      response.cookies.set('sb-refresh-token', refresh_token, cookieOptions)
+    if (session.refresh_token) {
+      response.cookies.set('sb-refresh-token', session.refresh_token, cookieOptions)
     }
     
     // Session indicator for client-side checks (not httpOnly)
