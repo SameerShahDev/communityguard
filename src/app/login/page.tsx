@@ -147,11 +147,6 @@ function LoginContent() {
           {' '}and{' '}
           <Link href="/privacy" className="underline hover:text-slate-400 transition-colors">Privacy Policy</Link>.
         </p>
-
-        {/* Made By */}
-        <p className="mt-4 text-center text-xs text-slate-700">
-          Made with ❤️ by <span className="text-[#5865F2] font-semibold">Sameer Shah</span>
-        </p>
       </div>
     </div>
   );
