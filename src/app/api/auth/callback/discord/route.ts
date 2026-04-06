@@ -3,19 +3,45 @@ import { createEdgeClient } from '@/lib/supabase/edge';
 
 export const runtime = 'edge';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+
 export async function GET(req: Request) {
-  const { searchParams, origin } = new URL(req.url);
+  const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
   const guildId = searchParams.get('guild_id');
 
   if (!code || !guildId) {
-    return NextResponse.redirect(`${origin}/dashboard?error=missing_params`);
+    return NextResponse.redirect(`${SITE_URL}/dashboard?error=missing_params`);
   }
 
   const supabase = createEdgeClient();
   
+  // Get user from cookies if possible
+  let userId = '00000000-0000-0000-0000-000000000000';
+  const cookieHeader = req.headers.get('cookie');
+  if (cookieHeader) {
+    const match = cookieHeader.match(/sb-access-token=([^;]+)/);
+    if (match) {
+      try {
+        const token = match[1];
+        // Verify token with Supabase to get user
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          userId = userData.id || userId;
+        }
+      } catch (e) {
+        console.error('Failed to get user from token', e);
+      }
+    }
+  }
+  
   // Use the guildId to create a community record for the user
-  // We'll fetch the server name via Discord API if possible, or use a placeholder
   const discordToken = process.env.DISCORD_BOT_TOKEN;
   
   let serverName = "Connected Server";
@@ -31,13 +57,10 @@ export async function GET(req: Request) {
     console.error("Failed to fetch guild name", e);
   }
 
-  // Note: In Edge Runtime, we can't easily get the current user from cookies
-  // This would need to be handled via a different auth method (JWT token in query param, etc.)
-  // For now, we'll save with a temporary user_id that can be updated later
   const { error } = await supabase
     .from('communities')
     .upsert({
-      user_id: '00000000-0000-0000-0000-000000000000', // Placeholder - needs proper auth
+      user_id: userId,
       guild_id: guildId,
       guild_name: serverName,
       is_active: true
@@ -45,8 +68,8 @@ export async function GET(req: Request) {
 
   if (error) {
     console.error("Error saving community", error);
-    return NextResponse.redirect(`${origin}/dashboard?error=db_save_failed`);
+    return NextResponse.redirect(`${SITE_URL}/dashboard?error=db_save_failed`);
   }
 
-  return NextResponse.redirect(`${origin}/dashboard?success=server_connected`);
+  return NextResponse.redirect(`${SITE_URL}/dashboard?success=server_connected`);
 }
