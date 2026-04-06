@@ -89,6 +89,9 @@ function LoginContent() {
         challengeLength: codeChallenge.length
       });
       
+      // Use fixed SITE_URL to ensure consistent redirects
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+      
       // Store code verifier in URL parameter instead of cookie
       const authUrl = new URL(`${siteUrl}/auth/callback`);
       authUrl.searchParams.set('code_verifier', codeVerifier);
