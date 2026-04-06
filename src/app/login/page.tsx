@@ -2,12 +2,12 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
-export default function LoginPage() {
+function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -109,5 +109,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#0c0e12]">
+        <div className="animate-spin h-8 w-8 border-2 border-[#5865F2] border-t-transparent rounded-full" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
