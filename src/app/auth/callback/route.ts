@@ -8,7 +8,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pag
 const CONSOLE_BRANDING = `
 ╔══════════════════════════════════════════════════════════╗
 ║     🔐 CommunityGuard Auth System by Sameer Shah 🔐     ║
-║              Built with ❤️ for secure auth               ║
+║              @sameershahdev                              ║
 ╚══════════════════════════════════════════════════════════╝
 `;
 
