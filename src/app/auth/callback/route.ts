@@ -81,10 +81,42 @@ export async function GET(request: Request) {
       console.error('⚠️ [SameerShahDev] Database error (non-fatal):', dbError);
     }
 
-    console.log(' [SameerShahDev] Auth successful! Redirecting to:', next);
+    console.log('🎉 [SameerShahDev] Auth successful! Redirecting to:', next);
     console.log('═══════════════════════════════════════════════════════════');
     
-    return NextResponse.redirect(`${SITE_URL}${next}`)
+    // Create response with redirect and set cookies manually
+    const response = NextResponse.redirect(`${SITE_URL}${next}`)
+    
+    // Set cookies manually for Edge Runtime
+    const isSecure = SITE_URL.startsWith('https://')
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/'
+    }
+    
+    if (session?.access_token) {
+      response.cookies.set('sb-access-token', session.access_token, cookieOptions)
+      console.log('🍪 [SameerShahDev] Set sb-access-token cookie');
+    }
+    
+    if (session?.refresh_token) {
+      response.cookies.set('sb-refresh-token', session.refresh_token, cookieOptions)
+      console.log('🍪 [SameerShahDev] Set sb-refresh-token cookie');
+    }
+    
+    response.cookies.set('sb-session', 'active', {
+      secure: isSecure,
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/'
+    });
+    
+    console.log('🍪 [SameerShahDev] All cookies set successfully');
+    
+    return response
     
   } catch (error) {
     console.error('💥 [SameerShahDev] Auth callback exception:', error);
