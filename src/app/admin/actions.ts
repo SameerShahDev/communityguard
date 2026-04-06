@@ -3,43 +3,68 @@
 import { createClient } from "@/lib/supabase/server";
 
 export async function getAdminStats() {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  // 1. Fetch Pro Users (pro_days_left > 0)
-  const { count: proUsers, error: proError } = await supabase
-    .from("users")
-    .select("*", { count: "exact", head: true })
-    .gt("pro_days_left", 0);
+    // 1. Fetch Pro Users (pro_days_left > 0)
+    const { count: proUsers, error: proError } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .gt("pro_days_left", 0);
 
-  // 2. Fetch Trial Users (roughly those with 0 pro_days_left but recent signup)
-  const { count: trialUsers, error: trialError } = await supabase
-    .from("users")
-    .select("*", { count: "exact", head: true })
-    .eq("pro_days_left", 0);
+    // 2. Fetch Trial Users (roughly those with 0 pro_days_left but recent signup)
+    const { count: trialUsers, error: trialError } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .eq("pro_days_left", 0);
 
-  // 3. Get Pricing for MRR calculation
-  const { data: settings } = await supabase
-    .from("admin_settings")
-    .select("pro_price")
-    .single();
+    // 3. Get Pricing for MRR calculation
+    const { data: settings } = await supabase
+      .from("admin_settings")
+      .select("pro_price")
+      .maybeSingle();
 
-  const proPrice = settings?.pro_price || 3500;
-  const mrr = (proUsers || 0) * proPrice;
+    const proPrice = settings?.pro_price || 3500;
+    const mrr = (proUsers || 0) * proPrice;
 
-  return {
-    mrr,
-    proUsers: proUsers || 0,
-    trialUsers: trialUsers || 0,
-    error: proError || trialError
-  };
+    return {
+      mrr,
+      proUsers: proUsers || 0,
+      trialUsers: trialUsers || 0,
+      error: proError || trialError
+    };
+  } catch (error) {
+    console.error("Error in getAdminStats:", error);
+    // Return default values on error
+    return {
+      mrr: 0,
+      proUsers: 0,
+      trialUsers: 0,
+      error: error
+    };
+  }
 }
 
 export async function getAdminSettings() {
   const supabase = await createClient();
+  
+  // Try to get existing settings
   const { data, error } = await supabase
     .from("admin_settings")
     .select("*")
-    .single();
+    .maybeSingle();
+  
+  // If no settings exist, return defaults
+  if (!data && !error) {
+    return { 
+      data: {
+        referral_active: true,
+        maintenance_mode: false,
+        pro_price: 3500
+      }, 
+      error: null 
+    };
+  }
 
   return { data, error };
 }
