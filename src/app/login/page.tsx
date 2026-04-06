@@ -15,18 +15,31 @@ function LoginContent() {
 
   useEffect(() => {
     const errorParam = searchParams.get('error');
-    if (errorParam === 'auth_failed') {
-      setError('Authentication failed. Please try again.');
+    if (errorParam) {
+      const errorMessages: Record<string, string> = {
+        'auth_failed': 'Authentication failed. Please try again.',
+        'no_code': 'Authorization code missing. Please try logging in again.',
+        'no_user': 'User information not received from Discord.',
+        'token_exchange_failed': 'Failed to exchange token. Please try again.',
+        'invalid_token_response': 'Invalid response from authentication server.',
+        'auth_exception': 'An unexpected error occurred during authentication.',
+        'session_failed': 'Failed to create session. Please try again.',
+      };
+      setError(errorMessages[errorParam] || 'Authentication failed. Please try again.');
     }
   }, [searchParams]);
 
   const handleDiscordLogin = async () => {
     setIsLoading(true);
     setError(null);
+    
+    // Use fixed SITE_URL to ensure consistent redirects
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
       },
     });
     if (error) {
