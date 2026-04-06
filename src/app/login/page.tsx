@@ -103,9 +103,14 @@ function LoginContent() {
 
         <p className="mt-6 text-center text-xs text-slate-600">
           By continuing, you agree to our{' '}
-          <Link href="#" className="underline hover:text-slate-400 transition-colors">Terms</Link>
+          <Link href="/terms" className="underline hover:text-slate-400 transition-colors">Terms</Link>
           {' '}and{' '}
-          <Link href="#" className="underline hover:text-slate-400 transition-colors">Privacy Policy</Link>.
+          <Link href="/privacy" className="underline hover:text-slate-400 transition-colors">Privacy Policy</Link>.
+        </p>
+
+        {/* Made By */}
+        <p className="mt-4 text-center text-xs text-slate-700">
+          Made with ❤️ by <span className="text-[#5865F2] font-semibold">Sameer Shah</span>
         </p>
       </div>
     </div>
