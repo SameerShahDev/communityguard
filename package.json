@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run postbuild",
+    "postbuild": "node -e \"const fs=require('fs'), path=require('path'); const src='.vercel/output/static', dst='dist'; if(fs.existsSync(dst)) fs.rmSync(dst,{recursive:true}); if(fs.existsSync(src)) fs.cpSync(src,dst,{recursive:true,force:true}); console.log('Copied build output to dist');\"",
     "start": "next start",
     "lint": "eslint"
   },
