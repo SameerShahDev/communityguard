@@ -2,6 +2,22 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+// Admin User Management Types
+interface UserSubscription {
+  id: string;
+  email: string;
+  pro_days_left: number;
+  is_admin: boolean;
+  discord_id?: string;
+  created_at: string;
+}
+
+interface SubscriptionLimits {
+  max_servers: number;
+  max_emails_per_day: number;
+  max_members_tracked: number;
+}
+
 export async function getAdminStats() {
   try {
     const supabase = await createClient();
@@ -12,16 +28,21 @@ export async function getAdminStats() {
       .select("*", { count: "exact", head: true })
       .gt("pro_days_left", 0);
 
-    // 2. Fetch Trial Users (roughly those with 0 pro_days_left but recent signup)
+    // 2. Fetch Trial Users (roughly those with 0 pro_days_left)
     const { count: trialUsers, error: trialError } = await supabase
       .from("users")
       .select("*", { count: "exact", head: true })
       .eq("pro_days_left", 0);
 
-    // 3. Get Pricing for MRR calculation
+    // 3. Fetch total users
+    const { count: totalUsers, error: totalError } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true });
+
+    // 4. Get Pricing for MRR calculation
     const { data: settings } = await supabase
       .from("admin_settings")
-      .select("pro_price")
+      .select("pro_price, referral_active, maintenance_mode")
       .maybeSingle();
 
     const proPrice = settings?.pro_price || 3500;
@@ -31,17 +52,155 @@ export async function getAdminStats() {
       mrr,
       proUsers: proUsers || 0,
       trialUsers: trialUsers || 0,
-      error: proError || trialError
+      totalUsers: totalUsers || 0,
+      settings,
+      error: proError || trialError || totalError
     };
   } catch (error) {
     console.error("Error in getAdminStats:", error);
-    // Return default values on error
     return {
       mrr: 0,
       proUsers: 0,
       trialUsers: 0,
+      totalUsers: 0,
+      settings: null,
       error: error
     };
+  }
+}
+
+// Get all users with subscription details
+export async function getAllUsers(): Promise<{ users: UserSubscription[]; error: any }> {
+  try {
+    const supabase = await createClient();
+    
+    const { data: users, error } = await supabase
+      .from("users")
+      .select("id, email, pro_days_left, is_admin, discord_id, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return { users: users || [], error: null };
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return { users: [], error };
+  }
+}
+
+// Update user subscription
+export async function updateUserSubscription(
+  userId: string, 
+  updates: { pro_days_left?: number; is_admin?: boolean }
+): Promise<{ success: boolean; error: any }> {
+  try {
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from("users")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", userId);
+
+    if (error) throw error;
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Error updating user subscription:", error);
+    return { success: false, error };
+  }
+}
+
+// Delete user
+export async function deleteUser(userId: string): Promise<{ success: boolean; error: any }> {
+  try {
+    const supabase = await createClient();
+    
+    // First delete from public.users
+    const { error: publicError } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", userId);
+
+    if (publicError) throw publicError;
+
+    // Then delete from auth.users (requires service role)
+    // Note: This would typically be done via admin API
+    console.log(`User ${userId} deleted from public.users`);
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return { success: false, error };
+  }
+}
+
+// Get subscription usage limits
+export async function getSubscriptionLimits(): Promise<{ 
+  free: SubscriptionLimits; 
+  pro: SubscriptionLimits;
+  error: any 
+}> {
+  try {
+    const supabase = await createClient();
+    
+    const { data: settings, error } = await supabase
+      .from("admin_settings")
+      .select("free_limits, pro_limits")
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const defaultFree: SubscriptionLimits = {
+      max_servers: 1,
+      max_emails_per_day: 10,
+      max_members_tracked: 100
+    };
+
+    const defaultPro: SubscriptionLimits = {
+      max_servers: 10,
+      max_emails_per_day: 100,
+      max_members_tracked: 10000
+    };
+
+    return {
+      free: settings?.free_limits || defaultFree,
+      pro: settings?.pro_limits || defaultPro,
+      error: null
+    };
+  } catch (error) {
+    console.error("Error fetching subscription limits:", error);
+    return {
+      free: { max_servers: 1, max_emails_per_day: 10, max_members_tracked: 100 },
+      pro: { max_servers: 10, max_emails_per_day: 100, max_members_tracked: 10000 },
+      error
+    };
+  }
+}
+
+// Update subscription limits
+export async function updateSubscriptionLimits(
+  plan: 'free' | 'pro',
+  limits: SubscriptionLimits
+): Promise<{ success: boolean; error: any }> {
+  try {
+    const supabase = await createClient();
+    
+    const updateField = plan === 'free' ? 'free_limits' : 'pro_limits';
+    
+    const { error } = await supabase
+      .from("admin_settings")
+      .update({ [updateField]: limits })
+      .eq("id", 1);
+
+    if (error) throw error;
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Error updating subscription limits:", error);
+    return { success: false, error };
   }
 }
 

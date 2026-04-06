@@ -11,16 +11,33 @@ import {
   getAdminSettings, 
   updateAdminSettings, 
   generateGiftCode, 
-  addManualCredits 
+  addManualCredits,
+  getAllUsers,
+  getSubscriptionLimits
 } from './actions';
+import { UserManagement, SubscriptionConfig } from './components';
 
 export default function AdminPanel() {
-  const [stats, setStats] = useState({ mrr: 0, proUsers: 0, trialUsers: 0 });
+  const [stats, setStats] = useState({ 
+    mrr: 0, 
+    proUsers: 0, 
+    trialUsers: 0, 
+    totalUsers: 0,
+    settings: null 
+  });
   const [settings, setSettings] = useState({ referral_active: true, maintenance_mode: false, pro_price: 3500 });
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [manualInput, setManualInput] = useState({ id: '', days: 30, reason: 'GPay payment' });
   const [giftInput, setGiftInput] = useState({ code: '', uses: 50 });
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'subscriptions'>('overview');
+  const [users, setUsers] = useState<any[]>([]);
+  const [subscriptionLimits, setSubscriptionLimits] = useState({
+    free: { max_servers: 1, max_emails_per_day: 10, max_members_tracked: 100 },
+    pro: { max_servers: 10, max_emails_per_day: 100, max_members_tracked: 10000 }
+  });
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isEditingUser, setIsEditingUser] = useState(false);
 
   useEffect(() => {
     async function checkAdminAndLoad() {
@@ -49,14 +66,24 @@ export default function AdminPanel() {
 
         setIsAdmin(true);
 
-        // Load admin data
-        const [statsRes, settingsRes] = await Promise.all([
+        // Load all admin data
+        const [statsRes, settingsRes, usersRes, limitsRes] = await Promise.all([
           getAdminStats(),
-          getAdminSettings()
+          getAdminSettings(),
+          getAllUsers(),
+          getSubscriptionLimits()
         ]);
         
-        if (statsRes) setStats({ mrr: statsRes.mrr, proUsers: statsRes.proUsers, trialUsers: statsRes.trialUsers });
+        if (statsRes) setStats({ 
+          mrr: statsRes.mrr, 
+          proUsers: statsRes.proUsers, 
+          trialUsers: statsRes.trialUsers,
+          totalUsers: statsRes.totalUsers || 0,
+          settings: statsRes.settings
+        });
         if (settingsRes.data) setSettings(settingsRes.data);
+        if (usersRes.users) setUsers(usersRes.users);
+        if (limitsRes) setSubscriptionLimits(limitsRes);
       } catch (error) {
         console.error("Failed to load admin data:", error);
       } finally {
@@ -173,8 +200,44 @@ export default function AdminPanel() {
             <p className="text-slate-400">Manage platform revenue, limits, and user configurations.</p>
           </div>
 
-        {/* 📊 REVENUE METRICS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* 🔄 TAB NAVIGATION */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                activeTab === 'overview' 
+                  ? 'bg-[#5865F2] text-white' 
+                  : 'bg-white/5 text-slate-400 hover:text-white'
+              }`}
+            >
+              📊 Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                activeTab === 'users' 
+                  ? 'bg-[#5865F2] text-white' 
+                  : 'bg-white/5 text-slate-400 hover:text-white'
+              }`}
+            >
+              👥 Users ({stats.totalUsers})
+            </button>
+            <button
+              onClick={() => setActiveTab('subscriptions')}
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                activeTab === 'subscriptions' 
+                  ? 'bg-[#5865F2] text-white' 
+                  : 'bg-white/5 text-slate-400 hover:text-white'
+              }`}
+            >
+              💎 Subscriptions
+            </button>
+          </div>
+
+          {activeTab === 'overview' && (
+            <>
+              {/* 📊 REVENUE METRICS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-[#111318] border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden group">
              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] rounded-full group-hover:bg-emerald-500/10 transition-colors" />
              <p className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Total MRR</p>
@@ -292,6 +355,32 @@ export default function AdminPanel() {
                </div>
             </div>
           </div>
+        </>
+      )}
+
+      {activeTab === 'users' && (
+        <div className="bg-[#0c0e12] rounded-2xl p-4">
+          <UserManagement 
+            users={users} 
+            onRefresh={async () => {
+              const res = await getAllUsers();
+              if (res.users) setUsers(res.users);
+            }} 
+          />
+        </div>
+      )}
+
+      {activeTab === 'subscriptions' && (
+        <div className="bg-[#0c0e12] rounded-2xl p-4">
+          <SubscriptionConfig 
+            limits={subscriptionLimits} 
+            onRefresh={async () => {
+              const res = await getSubscriptionLimits();
+              if (res) setSubscriptionLimits(res);
+            }} 
+          />
+        </div>
+      )}
         </div>
       </main>
     </div>
