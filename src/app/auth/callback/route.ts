@@ -4,15 +4,30 @@ export const runtime = 'edge';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
 
+// ASCII Art for Sameer Shah branding
+const CONSOLE_BRANDING = `
+╔══════════════════════════════════════════════════════════╗
+║     🔐 CommunityGuard Auth System by Sameer Shah 🔐     ║
+║              Built with ❤️ for secure auth               ║
+╚══════════════════════════════════════════════════════════╝
+`;
+
 export async function GET(request: Request) {
+  console.log(CONSOLE_BRANDING);
+  console.log('🚀 [SameerShahDev] Auth callback initiated');
+  
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
   
-  console.log('Auth callback called:', { hasCode: !!code, url: request.url })
+  console.log('📋 [SameerShahDev] Request details:', { 
+    hasCode: !!code, 
+    next,
+    timestamp: new Date().toISOString()
+  });
 
   if (!code) {
-    console.error('No authorization code provided')
+    console.error('❌ [SameerShahDev] No authorization code provided!');
     return NextResponse.redirect(`${SITE_URL}/login?error=no_code`)
   }
 
@@ -20,16 +35,54 @@ export async function GET(request: Request) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   
   try {
-    // Get cookies from request
+    // Get all cookies from request
     const cookieHeader = request.headers.get('cookie') || ''
-    const cookies = Object.fromEntries(
-      cookieHeader.split(';').map(c => c.trim().split('=')).filter(([k]) => k)
-    )
+    console.log('🍪 [SameerShahDev] Raw cookie header:', cookieHeader);
     
-    // Get PKCE code verifier from cookie
-    const codeVerifier = cookies['sb-code-verifier'] || cookies['supabase-auth-code-verifier']
+    // Parse cookies properly
+    const cookies: Record<string, string> = {}
+    cookieHeader.split(';').forEach(cookie => {
+      const [key, ...valueParts] = cookie.trim().split('=')
+      if (key) {
+        cookies[key] = valueParts.join('=') // Handle values that might contain =
+      }
+    })
     
-    console.log('Code verifier present:', !!codeVerifier)
+    console.log('🍪 [SameerShahDev] Parsed cookies:', Object.keys(cookies));
+    
+    // Try multiple possible code verifier cookie names
+    const possibleCookieNames = [
+      'sb-code-verifier',
+      'supabase-auth-code-verifier',
+      'sb-lxizfxueyiixsctmtprq-code-verifier',
+      'sb-auth-token-code-verifier'
+    ];
+    
+    let codeVerifier: string | undefined;
+    for (const name of possibleCookieNames) {
+      if (cookies[name]) {
+        codeVerifier = cookies[name];
+        console.log(`✅ [SameerShahDev] Found code verifier in cookie: ${name}`);
+        break;
+      }
+    }
+    
+    // Also check for any cookie containing "code-verifier"
+    if (!codeVerifier) {
+      for (const [key, value] of Object.entries(cookies)) {
+        if (key.includes('code-verifier') || key.includes('verifier')) {
+          codeVerifier = value;
+          console.log(`✅ [SameerShahDev] Found code verifier in matching cookie: ${key}`);
+          break;
+        }
+      }
+    }
+    
+    if (!codeVerifier) {
+      console.warn('⚠️ [SameerShahDev] No code verifier cookie found! Available cookies:', Object.keys(cookies));
+    } else {
+      console.log('🔑 [SameerShahDev] Code verifier length:', codeVerifier.length);
+    }
 
     // Exchange code for session using Supabase auth API with PKCE
     const tokenUrl = new URL(`${supabaseUrl}/auth/v1/token`)
@@ -42,7 +95,12 @@ export async function GET(request: Request) {
     
     if (codeVerifier) {
       requestBody.code_verifier = codeVerifier
+      console.log('🔐 [SameerShahDev] Including code verifier in token request');
+    } else {
+      console.log('⚠️ [SameerShahDev] Proceeding without code verifier - this may fail for PKCE flows');
     }
+    
+    console.log('📤 [SameerShahDev] Sending token exchange request...');
     
     const authRes = await fetch(tokenUrl.toString(), {
       method: 'POST',
@@ -54,25 +112,30 @@ export async function GET(request: Request) {
       body: JSON.stringify(requestBody)
     })
     
-    console.log('Token exchange status:', authRes.status)
+    console.log('📥 [SameerShahDev] Token exchange response status:', authRes.status);
     
     if (!authRes.ok) {
       const errorData = await authRes.text()
-      console.error('Token exchange failed:', errorData)
+      console.error('❌ [SameerShahDev] Token exchange failed!');
+      console.error('   Status:', authRes.status);
+      console.error('   Error:', errorData.slice(0, 500));
       return NextResponse.redirect(`${SITE_URL}/login?error=token_exchange_failed`)
     }
     
     const authData = await authRes.json()
-    console.log('Token exchange successful, user:', authData.user?.id)
+    console.log('✅ [SameerShahDev] Token exchange successful!');
+    console.log('   User ID:', authData.user?.id);
+    console.log('   Email:', authData.user?.email);
     
     const { access_token, refresh_token, user } = authData
     
     if (!user || !access_token) {
-      console.error('Missing user or access token in response')
+      console.error('❌ [SameerShahDev] Missing user or access token in response!');
       return NextResponse.redirect(`${SITE_URL}/login?error=invalid_token_response`)
     }
 
     // Save user to database
+    console.log('💾 [SameerShahDev] Saving user to database...');
     try {
       const { createEdgeClient } = await import('@/lib/supabase/edge')
       const edgeSupabase = createEdgeClient()
@@ -91,9 +154,9 @@ export async function GET(request: Request) {
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
       
-      console.log('User saved to database:', user.id)
+      console.log('✅ [SameerShahDev] User saved successfully:', user.id);
     } catch (dbError) {
-      console.error('Database error (non-fatal):', dbError)
+      console.error('⚠️ [SameerShahDev] Database error (non-fatal):', dbError);
     }
 
     // Create response with redirect
@@ -110,14 +173,18 @@ export async function GET(request: Request) {
     }
     
     response.cookies.set('sb-access-token', access_token, cookieOptions)
+    console.log('🍪 [SameerShahDev] Set sb-access-token cookie');
     
     if (refresh_token) {
       response.cookies.set('sb-refresh-token', refresh_token, cookieOptions)
+      console.log('🍪 [SameerShahDev] Set sb-refresh-token cookie');
     }
     
-    // Clear code verifier cookie
+    // Clear code verifier cookie if it exists
     if (codeVerifier) {
-      response.cookies.set('sb-code-verifier', '', { maxAge: 0, path: '/' })
+      response.cookies.set('sb-code-verifier', '', { maxAge: 0, path: '/' });
+      response.cookies.set('supabase-auth-code-verifier', '', { maxAge: 0, path: '/' });
+      console.log('🧹 [SameerShahDev] Cleared code verifier cookies');
     }
     
     response.cookies.set('sb-session', 'active', {
@@ -125,13 +192,16 @@ export async function GET(request: Request) {
       sameSite: 'lax' as const,
       maxAge: 60 * 60 * 24 * 7,
       path: '/'
-    })
+    });
 
-    console.log('Auth successful, redirecting to:', next)
+    console.log('🎉 [SameerShahDev] Auth successful! Redirecting to:', next);
+    console.log('═══════════════════════════════════════════════════════════');
+    
     return response
     
   } catch (error) {
-    console.error('Auth callback exception:', error)
+    console.error('💥 [SameerShahDev] Auth callback exception:', error);
+    console.error('═══════════════════════════════════════════════════════════');
     return NextResponse.redirect(`${SITE_URL}/login?error=auth_exception`)
   }
 }
