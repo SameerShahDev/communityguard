@@ -17,6 +17,7 @@ export default function DashboardPage() {
     active: number;
     proDays: number;
     isPro: boolean;
+    hasServer: boolean;
     userEmail: string | undefined;
   }>({ 
     highRisk: 0, 
@@ -24,6 +25,7 @@ export default function DashboardPage() {
     active: 0, 
     proDays: 0,
     isPro: false,
+    hasServer: false,
     userEmail: undefined
   });
   const [members, setMembers] = useState<{member_id: string; risk_level: string; score: number}[]>([]);
@@ -66,7 +68,7 @@ export default function DashboardPage() {
       ]);
       setStats(statsRes);
       setMembers(membersRes.data);
-      if (statsRes.active > 0) setServerSelected(true);
+      if (statsRes.hasServer) setServerSelected(true);
       setIsLoading(false);
     }
     loadData();

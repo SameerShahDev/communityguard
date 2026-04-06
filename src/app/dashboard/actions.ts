@@ -8,6 +8,7 @@ export async function getDashboardStats(): Promise<{
   active: number; 
   proDays: number; 
   isPro: boolean;
+  hasServer: boolean;
   userEmail: string | undefined;
 }> {
   try {
@@ -16,7 +17,7 @@ export async function getDashboardStats(): Promise<{
     // Fetch current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, userEmail: undefined };
+      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined };
     }
 
     // Fetch user's pro status
@@ -44,17 +45,27 @@ export async function getDashboardStats(): Promise<{
       .from("member_activity")
       .select("*", { count: "exact", head: true });
 
+    // Check if user has connected a Discord server
+    const { data: communities } = await supabase
+      .from("communities")
+      .select("id, guild_id, guild_name")
+      .eq("user_id", user.id)
+      .limit(1);
+    
+    const hasServer = !!(communities && communities.length > 0);
+
     return {
       highRisk: highRisk || 0,
       silent: moderateRisk || 0,
       active: activeCount || 0,
       proDays,
       isPro,
+      hasServer,
       userEmail: user.email || undefined
     };
   } catch (error) {
     console.error("Error in getDashboardStats:", error);
-    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, userEmail: undefined };
+    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined };
   }
 }
 
