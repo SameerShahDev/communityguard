@@ -7,22 +7,16 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
-// 🔥 Cool Console Branding for Sameer Shah
+// 🔥 STOP! Console Security Warning + Branding for Sameer Shah
 const CONSOLE_ART = `
-%c
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║   ██████  █████╗ ███╗   ███╗███████╗███████╗██████╗         ║
-║  ██╔════╝██╔══██╗████╗ ████║██╔════╝██╔════╝██╔══██╗        ║
-║  ██║     ███████║██╔████╔██║█████╗  █████╗  ██████╔╝        ║
-║  ██║     ██╔══██║██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗        ║
-║  ╚██████╗██║  ██║██║ ╚═╝ ██║███████╗███████╗██║  ██║        ║
-║   ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝        ║
-║                                                              ║
-║           🔐 CommunityGuard Auth System 🔐                   ║
-║                   by Sameer Shah                             ║
-║                    Made with ❤️                               ║
-╚══════════════════════════════════════════════════════════════╝
+%c🛑 STOP! 🛑%c
+
+%cIf someone told you to copy/paste something here,
+you're likely being SCAMMED!%c
+
+%cThis is a secure authentication system.%c
+%cCreated by: @sameershahdev%c
+%cCommunityGuard - Protecting Discord Communities%c
 `;
 
 function LoginContent() {
@@ -32,14 +26,19 @@ function LoginContent() {
   const supabase = createClient();
 
   useEffect(() => {
-    // 🎨 Show cool ASCII art in console
+    // 🎨 Show security warning + branding in console
     console.log(
-      CONSOLE_ART, 
-      'background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%); color: white; font-size: 12px; font-weight: bold; padding: 10px; border-radius: 8px;'
+      CONSOLE_ART,
+      'color: #ff0000; font-size: 24px; font-weight: bold; background: #ffff00; padding: 4px; border-radius: 4px;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #ff0000; font-size: 16px; font-weight: bold;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #7289DA; font-size: 14px; font-style: italic;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #43b581; font-size: 14px; font-weight: bold;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #5865F2; font-size: 12px;'
     );
-    console.log('%c👋 Hey there, curious developer!', 'color: #5865F2; font-size: 16px; font-weight: bold;');
-    console.log('%c🚀 This auth system was crafted with care by Sameer Shah', 'color: #7289DA; font-size: 14px;');
-    console.log('%c🔒 Secure, fast, and reliable - just like your code should be!', 'color: #43b581; font-size: 12px;');
     
     const errorParam = searchParams.get('error');
     if (errorParam) {
