@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run postbuild",
-    "postbuild": "node -e \"const fs=require('fs'), path=require('path'); const src='.vercel/output/static', dst='dist'; if(fs.existsSync(dst)) fs.rmSync(dst,{recursive:true}); if(fs.existsSync(src)) fs.cpSync(src,dst,{recursive:true,force:true}); console.log('Copied build output to dist');\"",
+    "build": "next build",
+    "postbuild": "node -e \"const fs=require('fs'); const src='.vercel/output/static'; const dst='dist'; console.log('CWD:', process.cwd()); console.log('Src exists:', fs.existsSync(src)); console.log('Dst exists before:', fs.existsSync(dst)); if(fs.existsSync(dst)) fs.rmSync(dst,{recursive:true}); if(fs.existsSync(src)) { fs.cpSync(src,dst,{recursive:true,force:true}); console.log('Copy successful'); } else { console.log('Source not found!'); } console.log('Dst exists after:', fs.existsSync(dst));\"",
     "start": "next start",
     "lint": "eslint"
   },
