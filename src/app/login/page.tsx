@@ -60,17 +60,56 @@ function LoginContent() {
     setIsLoading(true);
     setError(null);
     
-    // Use fixed SITE_URL to ensure consistent redirects
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
-      },
-    });
-    if (error) {
-      setError('Failed to connect to Discord. Please try again.');
+    try {
+      // Generate PKCE code verifier and challenge
+      const generateCodeVerifier = () => {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return btoa(String.fromCharCode(...array))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+      };
+      
+      const generateCodeChallenge = async (verifier: string) => {
+        const data = new TextEncoder().encode(verifier);
+        const digest = await crypto.subtle.digest('SHA-256', data);
+        return btoa(String.fromCharCode(...new Uint8Array(digest)))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+      };
+      
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      
+      console.log('🔑 [SameerShahDev] Generated PKCE pair:', {
+        verifierLength: codeVerifier.length,
+        challengeLength: codeChallenge.length
+      });
+      
+      // Store code verifier in cookie
+      document.cookie = `sb-code-verifier=${codeVerifier}; path=/; max-age=600; secure; samesite=lax`;
+      console.log('🍪 [SameerShahDev] Set code verifier cookie');
+      
+      // Use fixed SITE_URL to ensure consistent redirects
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+      
+      // Build Discord OAuth URL manually with PKCE
+      const discordAuthUrl = new URL('https://discord.com/oauth2/authorize');
+      discordAuthUrl.searchParams.set('client_id', '1489654332361019422');
+      discordAuthUrl.searchParams.set('redirect_uri', `${siteUrl}/auth/callback`);
+      discordAuthUrl.searchParams.set('response_type', 'code');
+      discordAuthUrl.searchParams.set('scope', 'identify email guilds');
+      discordAuthUrl.searchParams.set('code_challenge', codeChallenge);
+      discordAuthUrl.searchParams.set('code_challenge_method', 'S256');
+      
+      console.log('🚀 [SameerShahDev] Redirecting to Discord OAuth');
+      window.location.href = discordAuthUrl.toString();
+      
+    } catch (error) {
+      console.error('❌ [SameerShahDev] Manual OAuth error:', error);
+      setError('Failed to initiate Discord login. Please try again.');
       setIsLoading(false);
     }
   };
