@@ -12,8 +12,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col md:flex-row">
-      <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-6 flex flex-col gap-8">
+    <div className="h-screen w-screen bg-slate-950 text-white flex flex-col md:flex-row overflow-hidden">
+      <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 md:p-6 flex flex-col gap-6 shrink-0">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-white mb-1">
             CommunityGuard<span className="text-blue-500">.ai</span>
@@ -29,8 +29,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
              Refer & Earn <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full">HOT</span>
           </Link>
           {user?.is_admin && (
-            <Link href="/admin" className="px-4 py-2 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors mt-8">
-               Admin Panel
+            <Link href="/admin" className="px-4 py-2 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors mt-4 border-t border-slate-700 pt-4">
+               ⚙️ Admin Panel
             </Link>
           )}
         </nav>
@@ -42,8 +42,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </aside>
       
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-        {children}
+      <main className="flex-1 p-4 md:p-6 overflow-hidden">
+        <div className="h-full w-full overflow-y-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

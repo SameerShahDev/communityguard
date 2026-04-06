@@ -135,10 +135,10 @@ export default function AdminPanel() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0c0e12] text-[#f6f6fc] font-sans flex flex-col md:flex-row">
+    <div className="h-screen w-screen bg-[#0c0e12] text-[#f6f6fc] font-sans flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-[#111318] border-b md:border-b-0 md:border-r border-white/5 p-4 flex flex-col z-20 sticky top-0 md:h-screen">
-        <div className="flex items-center justify-between md:justify-start gap-3 mb-8">
+      <aside className="w-full md:w-64 bg-[#111318] border-b md:border-b-0 md:border-r border-white/5 p-4 flex flex-col shrink-0">
+        <div className="flex items-center justify-between md:justify-start gap-3 mb-6">
           <Link href="/" className="w-8 h-8 rounded-lg bg-[#5865F2] flex items-center justify-center shadow-[0_0_15px_rgba(88,101,242,0.4)]">
             <span className="text-white font-bold">C</span>
           </Link>
@@ -149,17 +149,29 @@ export default function AdminPanel() {
           <Link href="/dashboard" className="px-4 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-colors">
             📊 Overview
           </Link>
-          <Link href="/admin" className="px-4 py-2.5 rounded-lg bg-[#5865F2]/10 text-[#a2a9fa] font-medium border border-[#5865F2]/20">
-            ⚙️ Admin Panel
+          <Link href="/dashboard/referrals" className="px-4 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-colors">
+            🎁 Referrals
           </Link>
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <Link href="/admin" className="px-4 py-2.5 rounded-lg bg-[#5865F2]/10 text-[#a2a9fa] font-medium border border-[#5865F2]/20">
+              ⚙️ Admin Panel
+            </Link>
+          </div>
         </nav>
+
+        <div className="mt-auto pt-4">
+          <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors">
+            ← Back to Dashboard
+          </Link>
+        </div>
       </aside>
 
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto w-full max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">Super Admin Control</h1>
-          <p className="text-slate-400">Manage platform revenue, limits, and user configurations.</p>
-        </div>
+      <main className="flex-1 p-4 md:p-6 overflow-hidden">
+        <div className="h-full w-full overflow-y-auto">
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">Super Admin Control</h1>
+            <p className="text-slate-400">Manage platform revenue, limits, and user configurations.</p>
+          </div>
 
         {/* 📊 REVENUE METRICS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
