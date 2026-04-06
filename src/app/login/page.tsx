@@ -2,22 +2,37 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'auth_failed') {
+      setError('Authentication failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleDiscordLogin = async () => {
     setIsLoading(true);
-    await supabase.auth.signInWithOAuth({
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
+    if (error) {
+      setError('Failed to connect to Discord. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -42,6 +57,13 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-[#111318] border border-white/5 rounded-3xl p-8 shadow-2xl">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Discord OAuth */}
           <button
             onClick={handleDiscordLogin}
