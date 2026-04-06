@@ -7,6 +7,24 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
+// 🔥 Cool Console Branding for Sameer Shah
+const CONSOLE_ART = `
+%c
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   ██████  █████╗ ███╗   ███╗███████╗███████╗██████╗         ║
+║  ██╔════╝██╔══██╗████╗ ████║██╔════╝██╔════╝██╔══██╗        ║
+║  ██║     ███████║██╔████╔██║█████╗  █████╗  ██████╔╝        ║
+║  ██║     ██╔══██║██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗        ║
+║  ╚██████╗██║  ██║██║ ╚═╝ ██║███████╗███████╗██║  ██║        ║
+║   ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝        ║
+║                                                              ║
+║           🔐 CommunityGuard Auth System 🔐                   ║
+║                   by Sameer Shah                             ║
+║                    Made with ❤️                               ║
+╚══════════════════════════════════════════════════════════════╝
+`;
+
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +32,15 @@ function LoginContent() {
   const supabase = createClient();
 
   useEffect(() => {
+    // 🎨 Show cool ASCII art in console
+    console.log(
+      CONSOLE_ART, 
+      'background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%); color: white; font-size: 12px; font-weight: bold; padding: 10px; border-radius: 8px;'
+    );
+    console.log('%c👋 Hey there, curious developer!', 'color: #5865F2; font-size: 16px; font-weight: bold;');
+    console.log('%c🚀 This auth system was crafted with care by Sameer Shah', 'color: #7289DA; font-size: 14px;');
+    console.log('%c🔒 Secure, fast, and reliable - just like your code should be!', 'color: #43b581; font-size: 12px;');
+    
     const errorParam = searchParams.get('error');
     if (errorParam) {
       const errorMessages: Record<string, string> = {
