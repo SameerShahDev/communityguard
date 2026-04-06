@@ -85,19 +85,21 @@ export async function GET(request: Request) {
     }
 
     // Exchange code for session using Supabase auth API with PKCE
+    // Note: PKCE uses grant_type=authorization_code, not pkce
     const tokenUrl = new URL(`${supabaseUrl}/auth/v1/token`)
-    tokenUrl.searchParams.set('grant_type', 'pkce')
+    tokenUrl.searchParams.set('grant_type', 'authorization_code')
     
     const requestBody: Record<string, string> = {
-      auth_code: code,
+      code: code,
       redirect_uri: `${SITE_URL}/auth/callback`
     }
     
+    // PKCE requires code_verifier
     if (codeVerifier) {
       requestBody.code_verifier = codeVerifier
       console.log('🔐 [SameerShahDev] Including code verifier in token request');
     } else {
-      console.log('⚠️ [SameerShahDev] Proceeding without code verifier - this may fail for PKCE flows');
+      console.error('❌ [SameerShahDev] No code verifier found! PKCE flow will fail.');
     }
     
     console.log('📤 [SameerShahDev] Sending token exchange request...');
