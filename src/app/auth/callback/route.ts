@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'edge';
@@ -16,6 +15,7 @@ export async function GET(request: Request) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     
     try {
+      // Exchange code for session using Supabase auth
       const authRes = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=authorization_code`, {
         method: 'POST',
         headers: {
@@ -23,12 +23,15 @@ export async function GET(request: Request) {
           'apikey': supabaseAnonKey,
           'Authorization': `Bearer ${supabaseAnonKey}`
         },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ 
+          code,
+          redirect_uri: `${SITE_URL}/auth/callback`
+        })
       })
       
       if (authRes.ok) {
         const authData = await authRes.json()
-        const { access_token, user } = authData
+        const { access_token, refresh_token, user } = authData
         
         if (user) {
           const { createEdgeClient } = await import('@/lib/supabase/edge')
@@ -46,22 +49,39 @@ export async function GET(request: Request) {
             }, { onConflict: 'email' });
           
           const response = NextResponse.redirect(`${SITE_URL}${next}`)
+          
+          // Set auth cookies
           response.cookies.set('sb-access-token', access_token, {
             httpOnly: true,
             secure: true,
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7
+            maxAge: 60 * 60 * 24 * 7,
+            path: '/'
           })
+          
+          if (refresh_token) {
+            response.cookies.set('sb-refresh-token', refresh_token, {
+              httpOnly: true,
+              secure: true,
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 24 * 7,
+              path: '/'
+            })
+          }
+          
           return response
         }
       } else {
         const errorData = await authRes.text()
         console.error('Auth exchange failed:', errorData)
+        // Redirect with specific error
+        return NextResponse.redirect(`${SITE_URL}/login?error=exchange_failed`)
       }
     } catch (error) {
       console.error('Auth callback error:', error)
+      return NextResponse.redirect(`${SITE_URL}/login?error=callback_error`)
     }
   }
 
-  return NextResponse.redirect(`${SITE_URL}/login?error=auth_failed`)
+  return NextResponse.redirect(`${SITE_URL}/login?error=no_code`)
 }
