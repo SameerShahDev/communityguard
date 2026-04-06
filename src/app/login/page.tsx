@@ -45,6 +45,7 @@ function LoginContent() {
       const errorMessages: Record<string, string> = {
         'auth_failed': 'Authentication failed. Please try again.',
         'no_code': 'Authorization code missing. Please try logging in again.',
+        'no_state': 'State parameter missing. Please try logging in again.',
         'no_code_verifier': 'Code verifier missing. Please try logging in again.',
         'no_user': 'User information not received from Discord.',
         'token_exchange_failed': 'Failed to exchange token. Please try again.',
@@ -92,23 +93,26 @@ function LoginContent() {
       // Use fixed SITE_URL to ensure consistent redirects
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
       
-      // Store code verifier in URL parameter instead of cookie
-      const authUrl = new URL(`${siteUrl}/auth/callback`);
-      authUrl.searchParams.set('code_verifier', codeVerifier);
-      authUrl.searchParams.set('next', '/dashboard');
+      // Create state parameter with code verifier and next
+      const stateData = JSON.stringify({
+        code_verifier: codeVerifier,
+        next: '/dashboard'
+      });
+      const state = btoa(stateData); // Base64 encode
       
-      console.log('🍪 [SameerShahDev] Using URL parameter for code verifier');
+      console.log('🍪 [SameerShahDev] Using state parameter for code verifier');
       
       // Build Discord OAuth URL manually with PKCE
       const discordAuthUrl = new URL('https://discord.com/oauth2/authorize');
       discordAuthUrl.searchParams.set('client_id', '1489654332361019422');
-      discordAuthUrl.searchParams.set('redirect_uri', authUrl.toString());
+      discordAuthUrl.searchParams.set('redirect_uri', `${siteUrl}/auth/callback`);
       discordAuthUrl.searchParams.set('response_type', 'code');
       discordAuthUrl.searchParams.set('scope', 'identify email guilds');
       discordAuthUrl.searchParams.set('code_challenge', codeChallenge);
       discordAuthUrl.searchParams.set('code_challenge_method', 'S256');
+      discordAuthUrl.searchParams.set('state', state); // Pass code verifier in state
       
-      console.log('🚀 [SameerShahDev] Redirecting to Discord OAuth');
+      console.log('🚀 [SameerShahDev] Discord OAuth URL:', discordAuthUrl.toString());
       window.location.href = discordAuthUrl.toString();
       
     } catch (error) {

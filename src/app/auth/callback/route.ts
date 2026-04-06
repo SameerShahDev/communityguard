@@ -19,11 +19,25 @@ export async function GET(request: Request) {
   
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const codeVerifier = searchParams.get('code_verifier')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const state = searchParams.get('state')
+  let codeVerifier: string | undefined
+  let next = '/dashboard'
+  
+  // Decode state parameter to get code verifier
+  if (state) {
+    try {
+      const stateData = JSON.parse(atob(state))
+      codeVerifier = stateData.code_verifier
+      next = stateData.next || '/dashboard'
+      console.log('🔓 [SameerShahDev] Decoded state parameter successfully');
+    } catch (error) {
+      console.error('❌ [SameerShahDev] Failed to decode state parameter:', error);
+    }
+  }
   
   console.log('📋 [SameerShahDev] Request details:', { 
     hasCode: !!code, 
+    hasState: !!state,
     hasCodeVerifier: !!codeVerifier,
     next,
     timestamp: new Date().toISOString()
