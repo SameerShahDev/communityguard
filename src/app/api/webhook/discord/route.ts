@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createEdgeClient } from '@/lib/supabase/edge';
 
 export const runtime = 'edge';
 
@@ -69,7 +69,7 @@ export const POST = async (req: NextRequest) => {
   if (data.t === 'GUILD_CREATE' || data.t === 'GUILD_MEMBER_ADD') {
     const guild = data.d;
     
-    const supabase = await createClient();
+    const supabase = createEdgeClient();
     
     // Find the user who authorized this bot installation
     // This would typically come from the OAuth flow

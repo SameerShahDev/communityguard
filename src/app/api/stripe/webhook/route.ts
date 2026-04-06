@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { handlePaidReferral } from '@/lib/referral';
-import { createClient } from '@/lib/supabase/server';
+import { createEdgeClient } from '@/lib/supabase/edge';
 
 export const runtime = 'edge';
 
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Webhook Error: ${error.message}` }, { status: 400 });
   }
 
-  const supabase = await createClient();
+  const supabase = createEdgeClient();
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
