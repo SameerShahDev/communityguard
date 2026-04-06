@@ -1,6 +1,7 @@
 "use client";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -21,45 +22,75 @@ export default function AdminPanel() {
 
   useEffect(() => {
     async function loadData() {
-      const [statsRes, settingsRes] = await Promise.all([
-        getAdminStats(),
-        getAdminSettings()
-      ]);
-      
-      if (statsRes) setStats({ mrr: statsRes.mrr, proUsers: statsRes.proUsers, trialUsers: statsRes.trialUsers });
-      if (settingsRes.data) setSettings(settingsRes.data);
-      setIsLoading(false);
+      try {
+        const [statsRes, settingsRes] = await Promise.all([
+          getAdminStats(),
+          getAdminSettings()
+        ]);
+        
+        if (statsRes) setStats({ mrr: statsRes.mrr, proUsers: statsRes.proUsers, trialUsers: statsRes.trialUsers });
+        if (settingsRes.data) setSettings(settingsRes.data);
+      } catch (error) {
+        console.error("Failed to load admin data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, []);
 
   const handleToggleReferral = async () => {
-    const newVal = !settings.referral_active;
-    setSettings(s => ({ ...s, referral_active: newVal }));
-    await updateAdminSettings({ referral_active: newVal });
+    try {
+      const newVal = !settings.referral_active;
+      setSettings(s => ({ ...s, referral_active: newVal }));
+      await updateAdminSettings({ referral_active: newVal });
+    } catch (error) {
+      console.error("Failed to update referral setting:", error);
+      alert("Failed to update setting");
+    }
   };
 
   const handleToggleMaintenance = async () => {
-    const newVal = !settings.maintenance_mode;
-    setSettings(s => ({ ...s, maintenance_mode: newVal }));
-    await updateAdminSettings({ maintenance_mode: newVal });
+    try {
+      const newVal = !settings.maintenance_mode;
+      setSettings(s => ({ ...s, maintenance_mode: newVal }));
+      await updateAdminSettings({ maintenance_mode: newVal });
+    } catch (error) {
+      console.error("Failed to update maintenance setting:", error);
+      alert("Failed to update setting");
+    }
   };
 
   const handleUpdatePrice = async (price: number) => {
-    setSettings(s => ({ ...s, pro_price: price }));
-    await updateAdminSettings({ pro_price: price });
+    try {
+      setSettings(s => ({ ...s, pro_price: price }));
+      await updateAdminSettings({ pro_price: price });
+    } catch (error) {
+      console.error("Failed to update price:", error);
+      alert("Failed to update price");
+    }
   };
 
   const handleAddCredits = async () => {
-    const res = await addManualCredits(manualInput.id, manualInput.days, manualInput.reason);
-    if (res.success) alert("Credits added successfully!");
-    else alert(res.error || "Failed to add credits");
+    try {
+      const res = await addManualCredits(manualInput.id, manualInput.days, manualInput.reason);
+      if (res.success) alert("Credits added successfully!");
+      else alert(res.error || "Failed to add credits");
+    } catch (error) {
+      console.error("Failed to add credits:", error);
+      alert("Failed to add credits");
+    }
   };
 
   const handleGiftCode = async () => {
-    const res = await generateGiftCode(giftInput.code, giftInput.uses);
-    if (res.data) alert("Code generated!");
-    else alert("Error generating code");
+    try {
+      const res = await generateGiftCode(giftInput.code, giftInput.uses);
+      if (res.data) alert("Code generated!");
+      else alert("Error generating code");
+    } catch (error) {
+      console.error("Failed to generate gift code:", error);
+      alert("Failed to generate code");
+    }
   };
   
   if (isLoading) return <div className="min-h-screen bg-[#0c0e12] flex items-center justify-center text-white">Loading Admin...</div>;
