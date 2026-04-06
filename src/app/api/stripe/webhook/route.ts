@@ -5,11 +5,18 @@ import { createEdgeClient } from '@/lib/supabase/edge';
 
 export const runtime = 'edge';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
   apiVersion: '2025-02-24.acacia',
-});
+}) : null;
 
 export async function POST(req: Request) {
+  // Dummy mode - return success if Stripe not configured
+  if (!stripe) {
+    console.log('Stripe webhook not configured - dummy mode');
+    return NextResponse.json({ received: true, dummy: true });
+  }
+
   const body = await req.text();
   const signature = req.headers.get('stripe-signature') as string;
 

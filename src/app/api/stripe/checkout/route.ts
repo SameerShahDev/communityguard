@@ -2,14 +2,24 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
   apiVersion: '2024-12-18.acacia',
-});
+}) : null;
 
 export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
+    // Dummy mode - return mock URL if Stripe not configured
+    if (!stripe) {
+      console.log('Stripe not configured - dummy mode');
+      return NextResponse.json({ 
+        url: '/dashboard?payment=success&dummy=true',
+        message: 'Payment system coming soon' 
+      });
+    }
+
     const supabase = await createClient();
     
     // Get current user
