@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node -e \"const fs=require('fs'); const src='.vercel/output/static'; const dst='dist'; console.log('CWD:', process.cwd()); console.log('Src exists:', fs.existsSync(src)); console.log('Dst exists before:', fs.existsSync(dst)); if(fs.existsSync(dst)) fs.rmSync(dst,{recursive:true}); if(fs.existsSync(src)) { fs.cpSync(src,dst,{recursive:true,force:true}); console.log('Copy successful'); } else { console.log('Source not found!'); } console.log('Dst exists after:', fs.existsSync(dst));\"",
+    "postbuild": "node -e \"const fs=require('fs'); const src='.next'; const dst='dist'; console.log('CWD:', process.cwd()); console.log('Src exists:', fs.existsSync(src)); if(fs.existsSync(dst)) fs.rmSync(dst,{recursive:true}); if(fs.existsSync(src)) { fs.cpSync(src,dst,{recursive:true,force:true}); console.log('Copy successful'); } else { console.log('Source not found!'); } console.log('Dst exists after:', fs.existsSync(dst));\"",
     "start": "next start",
     "lint": "eslint"
   },
