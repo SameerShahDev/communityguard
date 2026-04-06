@@ -10,11 +10,26 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
   const [serverSelected, setServerSelected] = useState(false);
-  const [stats, setStats] = useState({ highRisk: 0, silent: 0, active: 0, proDays: 0 });
+  const [stats, setStats] = useState<{ 
+    highRisk: number;
+    silent: number;
+    active: number;
+    proDays: number;
+    isPro: boolean;
+    userEmail: string | undefined;
+  }>({ 
+    highRisk: 0, 
+    silent: 0, 
+    active: 0, 
+    proDays: 0,
+    isPro: false,
+    userEmail: undefined
+  });
   const [members, setMembers] = useState<{member_id: string; risk_level: string; score: number}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{sent: number, recovered: number} | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -39,8 +54,18 @@ export default function DashboardPage() {
   }, []);
 
   const handleConnectDiscord = async () => {
-    const url = await connectDiscord();
-    window.location.href = url;
+    setConnectError(null);
+    try {
+      const url = await connectDiscord();
+      if (url) {
+        window.location.href = url;
+      } else {
+        setConnectError("Failed to generate Discord connection URL");
+      }
+    } catch (error) {
+      console.error("Discord connect error:", error);
+      setConnectError("Failed to connect to Discord. Please try again.");
+    }
   };
 
   const handleSendEmails = async () => {
