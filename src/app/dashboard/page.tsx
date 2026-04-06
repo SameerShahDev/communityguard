@@ -1,7 +1,5 @@
 "use client";
 
-export const runtime = 'edge';
-
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function DashboardPage() {
   const [serverSelected, setServerSelected] = useState(false);
   const [stats, setStats] = useState({ highRisk: 0, silent: 0, active: 0, proDays: 0 });
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<{member_id: string; risk_level: string; score: number}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{sent: number, recovered: number} | null>(null);

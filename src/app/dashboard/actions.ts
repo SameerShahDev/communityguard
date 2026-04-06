@@ -81,7 +81,7 @@ export async function sendRecoveryEmails() {
     if (!res.ok) throw new Error("Failed to send emails");
     
     return await res.json();
-  } catch (error: any) {
-    return { error: error.message };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Failed to send emails" };
   }
 }
