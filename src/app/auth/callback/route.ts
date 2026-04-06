@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createEdgeClient } from '@/lib/supabase/edge'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'edge';
 
@@ -19,26 +19,10 @@ export async function GET(request: Request) {
   
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const state = searchParams.get('state')
-  let codeVerifier: string | undefined
-  let next = '/dashboard'
-  
-  // Decode state parameter to get code verifier
-  if (state) {
-    try {
-      const stateData = JSON.parse(atob(state))
-      codeVerifier = stateData.code_verifier
-      next = stateData.next || '/dashboard'
-      console.log('🔓 [SameerShahDev] Decoded state parameter successfully');
-    } catch (error) {
-      console.error('❌ [SameerShahDev] Failed to decode state parameter:', error);
-    }
-  }
+  const next = searchParams.get('next') ?? '/dashboard'
   
   console.log('📋 [SameerShahDev] Request details:', { 
     hasCode: !!code, 
-    hasState: !!state,
-    hasCodeVerifier: !!codeVerifier,
     next,
     timestamp: new Date().toISOString()
   });
@@ -48,79 +32,41 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${SITE_URL}/login?error=no_code`)
   }
 
-  const supabase = createEdgeClient()
+  const supabase = await createClient()
   
   console.log('🔑 [SameerShahDev] Supabase client created');
   
-  // Get environment variables
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
-  console.log('🔑 [SameerShahDev] Environment check:', {
-    supabaseUrl: supabaseUrl ? '✅' : '❌',
-    anonKey: supabaseAnonKey ? '✅' : '❌',
-    anonKeyLength: supabaseAnonKey?.length || 0
-  });
-  
   try {
-    if (!codeVerifier) {
-      console.error('❌ [SameerShahDev] No code verifier found in URL!');
-      return NextResponse.redirect(`${SITE_URL}/login?error=no_code_verifier`)
-    }
+    // Use Supabase built-in code exchange
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    console.log('🔑 [SameerShahDev] Code verifier length:', codeVerifier.length);
-
-    // Exchange code for session using Supabase auth API with PKCE
-    const tokenUrl = new URL(`${supabaseUrl}/auth/v1/token`)
-    tokenUrl.searchParams.set('grant_type', 'authorization_code')
+    console.log('� [SameerShahDev] Exchange result:', { 
+      hasData: !!data, 
+      hasError: !!error,
+      error: error?.message
+    });
     
-    const requestBody: Record<string, string> = {
-      code: code,
-      redirect_uri: `${SITE_URL}/auth/callback`,
-      code_verifier: codeVerifier
-    }
-    
-    console.log('🔐 [SameerShahDev] Including code verifier in token request');
-    console.log('📤 [SameerShahDev] Sending token exchange request...');
-    
-    const authRes = await fetch(tokenUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`
-      },
-      body: JSON.stringify(requestBody)
-    })
-    
-    console.log('📥 [SameerShahDev] Token exchange response status:', authRes.status);
-    
-    if (!authRes.ok) {
-      const errorData = await authRes.text()
-      console.error('❌ [SameerShahDev] Token exchange failed!');
-      console.error('   Status:', authRes.status);
-      console.error('   Error:', errorData.slice(0, 500));
+    if (error) {
+      console.error('❌ [SameerShahDev] Exchange failed:', error);
       return NextResponse.redirect(`${SITE_URL}/login?error=token_exchange_failed`)
     }
     
-    const authData = await authRes.json()
-    console.log('✅ [SameerShahDev] Token exchange successful!');
-    console.log('   User ID:', authData.user?.id);
-    console.log('   Email:', authData.user?.email);
+    const { user, session } = data
+    console.log('✅ [SameerShahDev] Exchange successful! User:', user?.id);
     
-    const { access_token, refresh_token, user } = authData
+    if (!user || !session?.access_token) {
+      console.error('❌ [SameerShahDev] Missing user or access token in response!');
+      return NextResponse.redirect(`${SITE_URL}/login?error=invalid_token_response`)
+    }
 
     // Save user to database
     console.log('💾 [SameerShahDev] Saving user to database...');
     try {
-      const { createEdgeClient } = await import('@/lib/supabase/edge')
-      const edgeSupabase = createEdgeClient()
-      
       const discord_id = user.user_metadata?.provider_id || 
                         user.user_metadata?.sub || 
                         user.identities?.find((i: any) => i.provider === 'discord')?.id;
       
-      await edgeSupabase
+      await supabase
         .from('users')
         .upsert({
           id: user.id,
@@ -135,38 +81,10 @@ export async function GET(request: Request) {
       console.error('⚠️ [SameerShahDev] Database error (non-fatal):', dbError);
     }
 
-    // Create response with redirect
-    const response = NextResponse.redirect(`${SITE_URL}${next}`)
-    
-    // Set cookies
-    const isSecure = SITE_URL.startsWith('https://')
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'lax' as const,
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/'
-    }
-    
-    response.cookies.set('sb-access-token', access_token, cookieOptions)
-    console.log('🍪 [SameerShahDev] Set sb-access-token cookie');
-    
-    if (refresh_token) {
-      response.cookies.set('sb-refresh-token', refresh_token, cookieOptions)
-      console.log('🍪 [SameerShahDev] Set sb-refresh-token cookie');
-    }
-    
-    response.cookies.set('sb-session', 'active', {
-      secure: isSecure,
-      sameSite: 'lax' as const,
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/'
-    });
-
-    console.log('🎉 [SameerShahDev] Auth successful! Redirecting to:', next);
+    console.log(' [SameerShahDev] Auth successful! Redirecting to:', next);
     console.log('═══════════════════════════════════════════════════════════');
     
-    return response
+    return NextResponse.redirect(`${SITE_URL}${next}`)
     
   } catch (error) {
     console.error('💥 [SameerShahDev] Auth callback exception:', error);

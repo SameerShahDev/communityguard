@@ -63,60 +63,33 @@ function LoginContent() {
     setError(null);
     
     try {
-      // Generate PKCE code verifier and challenge
-      const generateCodeVerifier = () => {
-        const array = new Uint8Array(32);
-        crypto.getRandomValues(array);
-        return btoa(String.fromCharCode(...array))
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=/g, '');
-      };
-      
-      const generateCodeChallenge = async (verifier: string) => {
-        const data = new TextEncoder().encode(verifier);
-        const digest = await crypto.subtle.digest('SHA-256', data);
-        return btoa(String.fromCharCode(...new Uint8Array(digest)))
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=/g, '');
-      };
-      
-      const codeVerifier = generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
-      
-      console.log('🔑 [SameerShahDev] Generated PKCE pair:', {
-        verifierLength: codeVerifier.length,
-        challengeLength: codeChallenge.length
-      });
-      
       // Use fixed SITE_URL to ensure consistent redirects
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
       
-      // Create state parameter with code verifier and next
-      const stateData = JSON.stringify({
-        code_verifier: codeVerifier,
-        next: '/dashboard'
+      console.log('🚀 [SameerShahDev] Using Supabase built-in Discord OAuth');
+      
+      // Use Supabase built-in OAuth instead of manual PKCE
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
+        },
       });
-      const state = btoa(stateData); // Base64 encode
       
-      console.log('🍪 [SameerShahDev] Using state parameter for code verifier');
+      if (error) {
+        console.error('❌ [SameerShahDev] Supabase OAuth error:', error);
+        setError('Failed to connect to Discord. Please try again.');
+        setIsLoading(false);
+        return;
+      }
       
-      // Build Discord OAuth URL manually with PKCE
-      const discordAuthUrl = new URL('https://discord.com/oauth2/authorize');
-      discordAuthUrl.searchParams.set('client_id', '1489654332361019422');
-      discordAuthUrl.searchParams.set('redirect_uri', `${siteUrl}/auth/callback`);
-      discordAuthUrl.searchParams.set('response_type', 'code');
-      discordAuthUrl.searchParams.set('scope', 'identify email guilds');
-      discordAuthUrl.searchParams.set('code_challenge', codeChallenge);
-      discordAuthUrl.searchParams.set('code_challenge_method', 'S256');
-      discordAuthUrl.searchParams.set('state', state); // Pass code verifier in state
-      
-      console.log('🚀 [SameerShahDev] Discord OAuth URL:', discordAuthUrl.toString());
-      window.location.href = discordAuthUrl.toString();
+      if (data.url) {
+        console.log('🚀 [SameerShahDev] Redirecting to Discord OAuth');
+        window.location.href = data.url;
+      }
       
     } catch (error) {
-      console.error('❌ [SameerShahDev] Manual OAuth error:', error);
+      console.error('❌ [SameerShahDev] OAuth error:', error);
       setError('Failed to initiate Discord login. Please try again.');
       setIsLoading(false);
     }
