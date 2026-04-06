@@ -19,10 +19,12 @@ export async function GET(request: Request) {
   
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
+  const codeVerifier = searchParams.get('code_verifier')
   const next = searchParams.get('next') ?? '/dashboard'
   
   console.log('📋 [SameerShahDev] Request details:', { 
     hasCode: !!code, 
+    hasCodeVerifier: !!codeVerifier,
     next,
     timestamp: new Date().toISOString()
   });
@@ -47,54 +49,12 @@ export async function GET(request: Request) {
   });
   
   try {
-    // Get all cookies from request
-    const cookieHeader = request.headers.get('cookie') || ''
-    console.log('🍪 [SameerShahDev] Raw cookie header:', cookieHeader);
-    
-    // Parse cookies properly
-    const cookies: Record<string, string> = {}
-    cookieHeader.split(';').forEach(cookie => {
-      const [key, ...valueParts] = cookie.trim().split('=')
-      if (key) {
-        cookies[key] = valueParts.join('=') // Handle values that might contain =
-      }
-    })
-    
-    console.log('🍪 [SameerShahDev] Parsed cookies:', Object.keys(cookies));
-    
-    // Try multiple possible code verifier cookie names
-    const possibleCookieNames = [
-      'sb-code-verifier',
-      'supabase-auth-code-verifier',
-      'sb-lxizfxueyiixsctmtprq-code-verifier',
-      'sb-auth-token-code-verifier'
-    ];
-    
-    let codeVerifier: string | undefined;
-    for (const name of possibleCookieNames) {
-      if (cookies[name]) {
-        codeVerifier = cookies[name];
-        console.log(`✅ [SameerShahDev] Found code verifier in cookie: ${name}`);
-        break;
-      }
-    }
-    
-    // Also check for any cookie containing "code-verifier"
     if (!codeVerifier) {
-      for (const [key, value] of Object.entries(cookies)) {
-        if (key.includes('code-verifier') || key.includes('verifier')) {
-          codeVerifier = value;
-          console.log(`✅ [SameerShahDev] Found code verifier in matching cookie: ${key}`);
-          break;
-        }
-      }
+      console.error('❌ [SameerShahDev] No code verifier found in URL!');
+      return NextResponse.redirect(`${SITE_URL}/login?error=no_code_verifier`)
     }
     
-    if (!codeVerifier) {
-      console.warn('⚠️ [SameerShahDev] No code verifier cookie found! Available cookies:', Object.keys(cookies));
-    } else {
-      console.log('🔑 [SameerShahDev] Code verifier length:', codeVerifier.length);
-    }
+    console.log('🔑 [SameerShahDev] Code verifier length:', codeVerifier.length);
 
     // Exchange code for session using Supabase auth API with PKCE
     const tokenUrl = new URL(`${supabaseUrl}/auth/v1/token`)
@@ -102,17 +62,11 @@ export async function GET(request: Request) {
     
     const requestBody: Record<string, string> = {
       code: code,
-      redirect_uri: `${SITE_URL}/auth/callback`
+      redirect_uri: `${SITE_URL}/auth/callback`,
+      code_verifier: codeVerifier
     }
     
-    // PKCE requires code_verifier
-    if (codeVerifier) {
-      requestBody.code_verifier = codeVerifier
-      console.log('🔐 [SameerShahDev] Including code verifier in token request');
-    } else {
-      console.error('❌ [SameerShahDev] No code verifier found! PKCE flow will fail.');
-    }
-    
+    console.log('🔐 [SameerShahDev] Including code verifier in token request');
     console.log('📤 [SameerShahDev] Sending token exchange request...');
     
     const authRes = await fetch(tokenUrl.toString(), {

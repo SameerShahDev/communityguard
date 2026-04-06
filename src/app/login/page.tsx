@@ -45,6 +45,7 @@ function LoginContent() {
       const errorMessages: Record<string, string> = {
         'auth_failed': 'Authentication failed. Please try again.',
         'no_code': 'Authorization code missing. Please try logging in again.',
+        'no_code_verifier': 'Code verifier missing. Please try logging in again.',
         'no_user': 'User information not received from Discord.',
         'token_exchange_failed': 'Failed to exchange token. Please try again.',
         'invalid_token_response': 'Invalid response from authentication server.',
@@ -88,17 +89,17 @@ function LoginContent() {
         challengeLength: codeChallenge.length
       });
       
-      // Store code verifier in cookie
-      document.cookie = `sb-code-verifier=${codeVerifier}; path=/; max-age=600; secure; samesite=lax`;
-      console.log('🍪 [SameerShahDev] Set code verifier cookie');
+      // Store code verifier in URL parameter instead of cookie
+      const authUrl = new URL(`${siteUrl}/auth/callback`);
+      authUrl.searchParams.set('code_verifier', codeVerifier);
+      authUrl.searchParams.set('next', '/dashboard');
       
-      // Use fixed SITE_URL to ensure consistent redirects
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+      console.log('🍪 [SameerShahDev] Using URL parameter for code verifier');
       
       // Build Discord OAuth URL manually with PKCE
       const discordAuthUrl = new URL('https://discord.com/oauth2/authorize');
       discordAuthUrl.searchParams.set('client_id', '1489654332361019422');
-      discordAuthUrl.searchParams.set('redirect_uri', `${siteUrl}/auth/callback`);
+      discordAuthUrl.searchParams.set('redirect_uri', authUrl.toString());
       discordAuthUrl.searchParams.set('response_type', 'code');
       discordAuthUrl.searchParams.set('scope', 'identify email guilds');
       discordAuthUrl.searchParams.set('code_challenge', codeChallenge);
