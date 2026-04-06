@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
   const [serverSelected, setServerSelected] = useState(false);
-  const [stats, setStats] = useState({ highRisk: 0, silent: 0, active: 0 });
+  const [stats, setStats] = useState({ highRisk: 0, silent: 0, active: 0, proDays: 0 });
   const [members, setMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -112,23 +112,29 @@ export default function DashboardPage() {
                 <span className="text-lg mb-1">😴</span>
               </div>
             </div>
-            <div className="bg-[#111318] border border-emerald-500/30 rounded-2xl p-4 md:p-6 col-span-2 md:col-span-1">
+            <div className="bg-[#111318] border border-emerald-500/30 rounded-2xl p-4 md:p-6 relative overflow-hidden">
               <h3 className="text-emerald-400 text-xs md:text-sm font-semibold mb-2">Total Members</h3>
               <div className="flex items-end gap-2">
                 <span className="text-3xl md:text-5xl font-extrabold text-white">{stats.active}</span>
                 <span className="text-lg mb-1">👥</span>
               </div>
             </div>
-            <button 
-              onClick={handleSendEmails}
-              disabled={isSending}
-              className="bg-gradient-to-br from-[#5865F2] to-[#4752c4] rounded-2xl p-4 md:p-6 flex flex-col justify-center items-center text-center cursor-pointer hover:scale-[1.02] transition-transform shadow-[0_8px_30px_rgba(88,101,242,0.4)] col-span-2 md:col-span-1 border-0 w-full disabled:opacity-50"
-            >
-              <h3 className="text-white font-bold text-lg">{isSending ? 'Sending...' : 'Send Emails'}</h3>
-              <p className="text-white/80 text-xs md:text-sm">{isSending ? 'Please wait' : '1 tap recovery'}</p>
-            </button>
+            <div className="bg-[#111318] border border-blue-500/30 rounded-2xl p-4 md:p-6 relative overflow-hidden">
+              <h3 className="text-blue-400 text-xs md:text-sm font-semibold mb-2">Pro Days</h3>
+              <div className="flex items-end gap-2">
+                <span className="text-3xl md:text-5xl font-extrabold text-white">{stats.proDays}</span>
+                <span className="text-lg mb-1">📅</span>
+              </div>
+            </div>
           </div>
 
+          <button 
+            onClick={handleSendEmails}
+            disabled={isSending || !serverSelected}
+            className="w-full mb-8 py-4 px-6 bg-gradient-to-r from-[#5865F2] to-[#4752c4] hover:from-[#4752c4] hover:to-[#5865F2] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-[0_8px_30px_rgba(88,101,242,0.4)] hover:shadow-[0_8px_40px_rgba(88,101,242,0.6)] hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSending ? 'Sending...' : '📧 Send Recovery Emails'}
+          </button>
           {sendResult && (
             <div className="mb-8 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300">
               <div className="flex items-center gap-3">
