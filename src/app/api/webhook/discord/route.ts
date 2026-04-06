@@ -1,8 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import crypto from 'crypto';
 
 export const runtime = 'edge';
+
+// Convert hex string to Uint8Array
+function hexToUint8Array(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+}
+
+// Convert Uint8Array to ArrayBuffer
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+// Verify Discord webhook signature using Web Crypto API
+async function verifyDiscordSignature(
+  publicKey: string,
+  signature: string,
+  timestamp: string,
+  body: string
+): Promise<boolean> {
+  try {
+    const publicKeyBytes = hexToUint8Array(publicKey);
+    const signatureBytes = hexToUint8Array(signature);
+    const messageBytes = new TextEncoder().encode(timestamp + body);
+
+    // Import the public key
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      toArrayBuffer(publicKeyBytes),
+      { name: 'Ed25519' },
+      false,
+      ['verify']
+    );
+
+    // Verify the signature
+    return await crypto.subtle.verify('Ed25519', cryptoKey, toArrayBuffer(signatureBytes), messageBytes);
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    return false;
+  }
+}
 
 export const POST = async (req: NextRequest) => {
   const body = await req.text();
@@ -15,10 +57,9 @@ export const POST = async (req: NextRequest) => {
 
   // Verify Discord webhook signature
   const publicKey = process.env.DISCORD_PUBLIC_KEY!;
-  const message = timestamp + body;
-  const expectedSignature = crypto.sign(null, Buffer.from(message), publicKey).toString('hex');
-  
-  if (signature !== expectedSignature) {
+  const isValid = await verifyDiscordSignature(publicKey, signature, timestamp, body);
+
+  if (!isValid) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
