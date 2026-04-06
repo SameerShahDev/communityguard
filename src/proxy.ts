@@ -3,26 +3,34 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function proxy(request: NextRequest) {
-  // Only protect routes starting with /admin
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  const { pathname } = request.nextUrl;
+
+  // Protect dashboard routes - require authentication
+  if (pathname.startsWith('/dashboard')) {
     const supabase = await createClient();
-    
-    // Check if the user is logged in
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  // Protect admin routes - require admin role
+  if (pathname.startsWith('/admin')) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Query users table for is_admin status
-    const { data: user, error } = await supabase
+    const { data: userData } = await supabase
       .from('users')
       .select('is_admin')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
-    if (error || !user?.is_admin) {
-      console.warn("Unauthorized access attempt to /admin by user:", session.user.id);
+    if (!userData?.is_admin) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
@@ -32,5 +40,5 @@ export async function proxy(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/dashboard/:path*']
 };
