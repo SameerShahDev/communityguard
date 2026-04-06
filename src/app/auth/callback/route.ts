@@ -34,6 +34,17 @@ export async function GET(request: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   
+  console.log('🔑 [SameerShahDev] Environment check:', {
+    supabaseUrl: supabaseUrl ? '✅' : '❌',
+    anonKey: supabaseAnonKey ? '✅' : '❌',
+    anonKeyLength: supabaseAnonKey?.length || 0
+  });
+  
+  if (!supabaseAnonKey) {
+    console.error('❌ [SameerShahDev] Supabase anon key not found!');
+    return NextResponse.redirect(`${SITE_URL}/login?error=missing_api_key`)
+  }
+  
   try {
     // Get all cookies from request
     const cookieHeader = request.headers.get('cookie') || ''

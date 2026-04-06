@@ -50,6 +50,7 @@ function LoginContent() {
         'invalid_token_response': 'Invalid response from authentication server.',
         'auth_exception': 'An unexpected error occurred during authentication.',
         'session_failed': 'Failed to create session. Please try again.',
+        'missing_api_key': 'API key missing. Check environment configuration.',
       };
       setError(errorMessages[errorParam] || 'Authentication failed. Please try again.');
     }
