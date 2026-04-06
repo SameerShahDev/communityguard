@@ -5,6 +5,7 @@ export const runtime = 'edge';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails } from './actions';
 import { createClient } from '@/lib/supabase/client';
 
@@ -30,6 +31,24 @@ export default function DashboardPage() {
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{sent: number, recovered: number} | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Check for URL params from Discord callback
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+    
+    if (success === 'server_connected') {
+      setConnectSuccess('Discord server connected successfully!');
+      // Clear the URL params
+      window.history.replaceState({}, '', '/dashboard');
+    } else if (error) {
+      setConnectError(`Connection failed: ${error}`);
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadData() {
@@ -125,6 +144,13 @@ export default function DashboardPage() {
       {connectError && (
         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
           {connectError}
+        </div>
+      )}
+
+      {connectSuccess && (
+        <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-3">
+          <span className="text-xl">✅</span>
+          {connectSuccess}
         </div>
       )}
 

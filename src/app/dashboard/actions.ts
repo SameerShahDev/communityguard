@@ -88,23 +88,21 @@ export async function getAtRiskMembers() {
 export async function connectDiscord() {
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+    const clientId = process.env.DISCORD_CLIENT_ID || '1489654332361019422';
     
-    // Use Supabase built-in Discord OAuth instead of manual bot install
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${siteUrl}/dashboard`,
-        scopes: 'identify email guilds bot applications.commands',
-      },
+    // Discord Bot Authorization URL (not user OAuth)
+    const params = new URLSearchParams({
+      client_id: clientId,
+      permissions: '8', // Admin permissions
+      scope: 'bot applications.commands identify guilds',
+      redirect_uri: `${siteUrl}/api/auth/callback/discord`,
+      response_type: 'code',
     });
     
-    if (error || !data.url) {
-      console.error("Discord OAuth error:", error);
-      throw new Error("Failed to generate Discord OAuth URL");
-    }
+    const discordUrl = `https://discord.com/oauth2/authorize?${params.toString()}`;
+    console.log('Generated Discord Bot URL:', discordUrl);
     
-    return data.url;
+    return discordUrl;
   } catch (error) {
     console.error("Error in connectDiscord:", error);
     throw error;
