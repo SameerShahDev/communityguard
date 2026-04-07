@@ -66,7 +66,7 @@ export async function getAdminStats() {
       .gte("created_at", sixtyDaysAgo.toISOString())
       .lt("created_at", thirtyDaysAgo.toISOString());
 
-    const growthRate = previousUsers > 0 ? ((recentUsers - previousUsers) / previousUsers) * 100 : 0;
+    const growthRate = (previousUsers ?? 0) > 0 ? (((recentUsers ?? 0) - (previousUsers ?? 0)) / (previousUsers ?? 0)) * 100 : 0;
 
     // 6. Calculate churn rate (users who became inactive)
     const { count: churnedUsers } = await supabase
@@ -75,7 +75,7 @@ export async function getAdminStats() {
       .eq("pro_days_left", 0)
       .lt("created_at", thirtyDaysAgo.toISOString());
 
-    const churnRate = totalUsers > 0 ? (churnedUsers / totalUsers) * 100 : 0;
+    const churnRate = (totalUsers ?? 0) > 0 ? ((churnedUsers ?? 0) / (totalUsers ?? 0)) * 100 : 0;
 
     // 7. Active webhooks count
     const { count: activeWebhooks } = await supabase
@@ -115,7 +115,7 @@ export async function updateUserProDays(userId: string, days: number) {
     if (error) throw error;
     
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating user pro days:", error);
     return { success: false, error: error.message };
   }
@@ -126,9 +126,9 @@ export async function deleteUser(userId: string) {
     const supabase = await createClient();
     
     // Delete related data first
-    await supabase.from("member_activity").eq("user_id", userId).delete();
-    await supabase.from("communities").eq("user_id", userId).delete();
-    await supabase.from("referrals").eq("referrer_id", userId).delete();
+    await supabase.from("member_activity").delete().eq("user_id", userId);
+    await supabase.from("communities").delete().eq("user_id", userId);
+    await supabase.from("referrals").delete().eq("referrer_id", userId);
     
     // Delete user
     const { error } = await supabase
@@ -139,7 +139,7 @@ export async function deleteUser(userId: string) {
     if (error) throw error;
     
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting user:", error);
     return { success: false, error: error.message };
   }
@@ -165,7 +165,7 @@ export async function toggleUserAdmin(userId: string) {
     if (error) throw error;
     
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error toggling user admin:", error);
     return { success: false, error: error.message };
   }
@@ -183,7 +183,7 @@ export async function exportUsers() {
     if (error) throw error;
     
     return { users: users || [] };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error exporting users:", error);
     return { users: [], error: error.message };
   }
@@ -202,7 +202,7 @@ export async function getSystemLogs() {
     ];
     
     return { logs };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching system logs:", error);
     return { logs: [], error: error.message };
   }
