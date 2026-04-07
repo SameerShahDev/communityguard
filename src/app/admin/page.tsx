@@ -18,7 +18,13 @@ import {
 import { UserManagement, SubscriptionConfig } from './components';
 
 export default function AdminPanel() {
-  const [stats, setStats] = useState({ 
+  const [stats, setStats] = useState<{ 
+    mrr: number; 
+    proUsers: number; 
+    trialUsers: number; 
+    totalUsers: number;
+    settings: any 
+  }>({ 
     mrr: 0, 
     proUsers: 0, 
     trialUsers: 0, 
@@ -74,7 +80,7 @@ export default function AdminPanel() {
           proUsers: statsRes.proUsers, 
           trialUsers: statsRes.trialUsers,
           totalUsers: statsRes.totalUsers || 0,
-          settings: statsRes.settings
+          settings: statsRes.settings || null
         });
         if (settingsRes.data) setSettings(settingsRes.data);
         if (usersRes.users) setUsers(usersRes.users);
