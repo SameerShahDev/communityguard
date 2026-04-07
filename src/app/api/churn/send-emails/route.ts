@@ -1,10 +1,31 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { createEdgeClient } from '@/lib/supabase/edge';
 
 export const runtime = 'edge';
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_123');
+// Send email using Resend API directly (no SDK)
+async function sendEmail(to: string, subject: string, html: string) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: 'CommunityGuard <recovery@communityguard.ai>',
+      to: [to],
+      subject,
+      html
+    })
+  });
+  
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error);
+  }
+  
+  return res.json();
+}
 
 export async function POST(req: Request) {
   const supabase = createEdgeClient();
@@ -39,26 +60,27 @@ export async function POST(req: Request) {
     for (const member of atRiskMembers) {
       const communityName = (member.communities as any)?.name || "the community";
       
-      const { data, error } = await resend.emails.send({
-        from: 'CommunityGuard <recovery@communityguard.ai>',
-        to: [member.member_email!],
-        subject: `We miss you in ${communityName}!`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0c0e12; color: #f6f6fc; border-radius: 20px;">
-             <h3 style="color: #5865F2; font-size: 24px;">Hey ${member.member_name || 'there'}, miss you in ${communityName}!</h3>
-             <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">Brother, there's been <b>23 new posts</b> in ${communityName} since you've been away!</p>
-             <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">Jump back in now before you miss out on more.</p>
-             <div style="margin-top: 30px;">
-               <a href="https://discord.com/app" style="display: inline-block; padding: 12px 24px; background: #5865F2; color: white; border-radius: 12px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(88,101,242,0.4);">Launch Discord</a>
-             </div>
-          </div>
-        `
-      });
+      const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0c0e12; color: #f6f6fc; border-radius: 20px;">
+           <h3 style="color: #5865F2; font-size: 24px;">Hey ${member.member_name || 'there'}, miss you in ${communityName}!</h3>
+           <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">There's been <b>23 new posts</b> in ${communityName} since you've been away!</p>
+           <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">Jump back in now before you miss out on more.</p>
+           <div style="margin-top: 30px;">
+             <a href="https://discord.com/app" style="display: inline-block; padding: 12px 24px; background: #5865F2; color: white; border-radius: 12px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(88,101,242,0.4);">Launch Discord</a>
+           </div>
+        </div>
+      `;
       
-      if (!error) results.push(data);
+      const data = await sendEmail(
+        member.member_email!,
+        `We miss you in ${communityName}!`,
+        html
+      );
+      
+      results.push(data);
     }
 
-    // Mocking 'recovered' based on a roughly 35% estimated recovery rate as per previous logic
+    // Mocking 'recovered' based on a roughly 35% estimated recovery rate
     const sentCount = results.length;
     const recoveredCount = Math.floor(sentCount * 0.35);
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import ReferralModal from '@/app/components/ReferralModal';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -47,6 +48,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </div>
       </main>
+      
+      {/* Referral Code Modal - shows once after login */}
+      <ReferralModal />
     </div>
   );
 }
