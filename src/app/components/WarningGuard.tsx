@@ -13,7 +13,7 @@ interface WarningGuardProps {
 
 interface ErrorInfo {
   error: Error;
-  componentStack: string;
+  componentStack: string | null | undefined;
   errorId: string;
 }
 
