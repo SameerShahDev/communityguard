@@ -357,25 +357,3 @@ export async function sendRecoveryEmails() {
     return { error: error.message || "Failed to send emails", sent: 0, recovered: 0 };
   }
 }
-
-export async function createStripeCheckout() {
-  try {
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error || "Failed to create checkout");
-    }
-    
-    const data = await res.json();
-    return { url: data.url, error: null };
-  } catch (error: any) {
-    console.error("Stripe checkout error:", error);
-    return { url: null, error: error.message || "Failed to create checkout session" };
-  }
-}

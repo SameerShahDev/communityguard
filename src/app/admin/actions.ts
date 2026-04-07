@@ -208,27 +208,6 @@ export async function getSystemLogs() {
   }
 }
 
-    return {
-      mrr,
-      proUsers: proUsers || 0,
-      trialUsers: trialUsers || 0,
-      totalUsers: totalUsers || 0,
-      settings,
-      error: proError || trialError || totalError
-    };
-  } catch (error) {
-    console.error("Error in getAdminStats:", error);
-    return {
-      mrr: 0,
-      proUsers: 0,
-      trialUsers: 0,
-      totalUsers: 0,
-      settings: null,
-      error: error
-    };
-  }
-}
-
 // Get all users with subscription details
 export async function getAllUsers(): Promise<{ users: UserSubscription[]; error: any }> {
   try {
