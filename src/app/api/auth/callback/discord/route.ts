@@ -103,16 +103,42 @@ export async function GET(req: Request) {
 
   console.log('Attempting to save community:', { userId, guildId, serverName });
 
-  const { data, error } = await supabase
+  // First check if community already exists
+  const { data: existing } = await supabase
     .from('communities')
-    .upsert({
-      user_id: userId,
-      guild_id: guildId,
-      guild_name: serverName,
-      is_active: true,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'guild_id' })
-    .select();
+    .select('id')
+    .eq('guild_id', guildId)
+    .single();
+
+  let result;
+  if (existing) {
+    // Update existing
+    result = await supabase
+      .from('communities')
+      .update({
+        user_id: userId,
+        guild_name: serverName,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('guild_id', guildId)
+      .select();
+  } else {
+    // Insert new
+    result = await supabase
+      .from('communities')
+      .insert({
+        user_id: userId,
+        guild_id: guildId,
+        guild_name: serverName,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select();
+  }
+
+  const { data, error } = result;
 
   if (error) {
     console.error("Error saving community:", error);
