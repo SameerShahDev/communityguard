@@ -89,7 +89,7 @@ export async function getMemberActivity(userId: string, timeRange: '7d' | '30d' 
     if (error) throw error;
     
     return { activity: activity || [] };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching member activity:", error);
     return { activity: [], error: error.message };
   }
@@ -130,7 +130,7 @@ export async function getServerMetrics(userId: string) {
     };
     
     return { metrics };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching server metrics:", error);
     return { metrics: null, error: error.message };
   }
@@ -168,7 +168,7 @@ export async function exportData(userId: string, format: 'csv' | 'json') {
     }
     
     return { success: true, data };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error exporting data:", error);
     return { success: false, error: error.message };
   }
@@ -198,7 +198,7 @@ export async function getWeeklyActivity(userId: string) {
     });
     
     return weeklyData;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching weekly activity:", error);
     return [0, 0, 0, 0, 0, 0, 0];
   }
