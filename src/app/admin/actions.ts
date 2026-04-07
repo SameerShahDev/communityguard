@@ -16,6 +16,7 @@ interface SubscriptionLimits {
   max_servers: number;
   max_emails_per_day: number;
   max_members_tracked: number;
+  max_discord_bots?: number;
 }
 
 export async function getAdminStats() {
@@ -47,6 +48,165 @@ export async function getAdminStats() {
 
     const proPrice = settings?.pro_price || 3500;
     const mrr = (proUsers || 0) * proPrice;
+
+    // 5. Calculate growth rate (users from last 30 days vs previous 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const { count: recentUsers } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", thirtyDaysAgo.toISOString());
+
+    const { count: previousUsers } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", sixtyDaysAgo.toISOString())
+      .lt("created_at", thirtyDaysAgo.toISOString());
+
+    const growthRate = previousUsers > 0 ? ((recentUsers - previousUsers) / previousUsers) * 100 : 0;
+
+    // 6. Calculate churn rate (users who became inactive)
+    const { count: churnedUsers } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .eq("pro_days_left", 0)
+      .lt("created_at", thirtyDaysAgo.toISOString());
+
+    const churnRate = totalUsers > 0 ? (churnedUsers / totalUsers) * 100 : 0;
+
+    // 7. Active webhooks count
+    const { count: activeWebhooks } = await supabase
+      .from("communities")
+      .select("*", { count: "exact", head: true })
+      .not("webhook_url", "is", null);
+
+    // 8. System health check
+    const systemHealth = mrr > 10000 ? 'healthy' : mrr > 5000 ? 'warning' : 'critical';
+
+    return {
+      mrr,
+      proUsers: proUsers || 0,
+      trialUsers: trialUsers || 0,
+      totalUsers: totalUsers || 0,
+      settings,
+      growthRate,
+      churnRate,
+      activeWebhooks: activeWebhooks || 0,
+      systemHealth
+    };
+  } catch (error) {
+    console.error("Error fetching admin stats:", error);
+    return null;
+  }
+}
+
+export async function updateUserProDays(userId: string, days: number) {
+  try {
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from("users")
+      .update({ pro_days_left: days })
+      .eq("id", userId);
+
+    if (error) throw error;
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating user pro days:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteUser(userId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Delete related data first
+    await supabase.from("member_activity").eq("user_id", userId).delete();
+    await supabase.from("communities").eq("user_id", userId).delete();
+    await supabase.from("referrals").eq("referrer_id", userId).delete();
+    
+    // Delete user
+    const { error } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", userId);
+
+    if (error) throw error;
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function toggleUserAdmin(userId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Get current admin status
+    const { data: user } = await supabase
+      .from("users")
+      .select("is_admin")
+      .eq("id", userId)
+      .single();
+
+    // Toggle admin status
+    const { error } = await supabase
+      .from("users")
+      .update({ is_admin: !user?.is_admin })
+      .eq("id", userId);
+
+    if (error) throw error;
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error toggling user admin:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function exportUsers() {
+  try {
+    const supabase = await createClient();
+    
+    const { data: users, error } = await supabase
+      .from("users")
+      .select("email, pro_days_left, is_admin, created_at, discord_username")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    
+    return { users: users || [] };
+  } catch (error) {
+    console.error("Error exporting users:", error);
+    return { users: [], error: error.message };
+  }
+}
+
+export async function getSystemLogs() {
+  try {
+    const supabase = await createClient();
+    
+    // This would typically come from a logs table
+    // For now, return mock data
+    const logs = [
+      { timestamp: new Date().toISOString(), level: 'info', message: 'System health check completed' },
+      { timestamp: new Date(Date.now() - 3600000).toISOString(), level: 'warning', message: 'High memory usage detected' },
+      { timestamp: new Date(Date.now() - 7200000).toISOString(), level: 'info', message: 'Database backup completed' },
+    ];
+    
+    return { logs };
+  } catch (error) {
+    console.error("Error fetching system logs:", error);
+    return { logs: [], error: error.message };
+  }
+}
 
     return {
       mrr,

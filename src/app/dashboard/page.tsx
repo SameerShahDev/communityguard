@@ -6,11 +6,10 @@ export const runtime = 'edge';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails, createStripeCheckout } from './actions';
+import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails, createStripeCheckout, getMemberActivity, getServerMetrics, exportData } from './actions';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
-  const [serverSelected, setServerSelected] = useState(false);
   const [stats, setStats] = useState<{
     highRisk: number;
     silent: number;
@@ -21,6 +20,12 @@ export default function DashboardPage() {
     userEmail: string | undefined;
     totalMembers: number;
     serverName: string | null;
+    growthRate: number;
+    engagementRate: number;
+    weeklyActivity: number[];
+    topPerformers: any[];
+    recentAlerts: any[];
+    systemHealth: 'excellent' | 'good' | 'warning' | 'critical';
   }>({
     highRisk: 0,
     silent: 0,
@@ -30,9 +35,27 @@ export default function DashboardPage() {
     hasServer: false,
     userEmail: undefined,
     totalMembers: 0,
-    serverName: null
+    serverName: null,
+    growthRate: 0,
+    engagementRate: 0,
+    weeklyActivity: [],
+    topPerformers: [],
+    recentAlerts: [],
+    systemHealth: 'good'
   });
-  const [members, setMembers] = useState<{member_id: string; risk_level: string; score: number}[]>([]);
+  
+  const [members, setMembers] = useState<{
+    member_id: string; 
+    risk_level: string; 
+    score: number;
+    username: string;
+    last_message: string;
+    avatar_url?: string;
+  }[]>([]);
+  
+  const [activityData, setActivityData] = useState<any[]>([]);
+  const [serverMetrics, setServerMetrics] = useState<any>(null);
+  
   const [userId, setUserId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -41,6 +64,16 @@ export default function DashboardPage() {
   const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  
+  // Advanced states
+  const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [activeSection, setActiveSection] = useState<'overview' | 'members' | 'analytics' | 'settings'>('overview');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterRisk, setFilterRisk] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [sortBy, setSortBy] = useState<'risk' | 'activity' | 'name'>('risk');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [realTimeMode, setRealTimeMode] = useState(true);
 
   const searchParams = useSearchParams();
 
@@ -50,26 +83,39 @@ export default function DashboardPage() {
     const error = searchParams.get('error');
     const payment = searchParams.get('payment');
     
-    if (success === 'server_connected') {
+    if (success === 'discord') {
       setConnectSuccess('Discord server connected successfully!');
-      window.history.replaceState({}, '', '/dashboard');
+      // Clean URL without page reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('success');
+      window.history.replaceState({}, '', newUrl.toString());
     } else if (error) {
       setConnectError(`Connection failed: ${error}`);
-      window.history.replaceState({}, '', '/dashboard');
+      // Clean URL without page reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      window.history.replaceState({}, '', newUrl.toString());
     }
     
     // Handle payment status
     if (payment === 'success') {
       setPaymentStatus('success');
-      setConnectSuccess('🎉 Payment successful! You are now Pro!');
-      window.history.replaceState({}, '', '/dashboard');
-      // Refresh data to get updated pro status
-      setTimeout(() => window.location.reload(), 2000);
+      setConnectSuccess('Payment successful! Welcome to Pro! ');
+      // Clean URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('payment');
+      window.history.replaceState({}, '', newUrl.toString());
+      // Refresh data after a short delay to get updated pro status
+      setTimeout(() => loadDashboardData(), 2000);
     } else if (payment === 'cancelled') {
       setPaymentStatus('cancelled');
-      setConnectError('Payment was cancelled. You can try again anytime.');
-      window.history.replaceState({}, '', '/dashboard');
+      // Clean URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('payment');
+      window.history.replaceState({}, '', newUrl.toString());
     }
+
+    loadDashboardData();
   }, [searchParams]);
 
   useEffect(() => {

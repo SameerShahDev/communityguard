@@ -13,9 +13,15 @@ import {
   generateGiftCode, 
   addManualCredits,
   getAllUsers,
-  getSubscriptionLimits
+  getSubscriptionLimits,
+  updateUserProDays,
+  deleteUser,
+  toggleUserAdmin,
+  updateSubscriptionLimits,
+  exportUsers,
+  getSystemLogs
 } from './actions';
-import { UserManagement, SubscriptionConfig } from './components';
+import { UserManagement, SubscriptionConfig, SystemAnalytics, EmailTemplates } from './components';
 
 export default function AdminPanel() {
   const [stats, setStats] = useState<{ 
@@ -23,24 +29,60 @@ export default function AdminPanel() {
     proUsers: number; 
     trialUsers: number; 
     totalUsers: number;
-    settings: any 
+    settings: any;
+    growthRate: number;
+    churnRate: number;
+    activeWebhooks: number;
+    systemHealth: 'healthy' | 'warning' | 'critical';
   }>({ 
     mrr: 0, 
     proUsers: 0, 
     trialUsers: 0, 
     totalUsers: 0,
-    settings: null 
+    settings: null,
+    growthRate: 0,
+    churnRate: 0,
+    activeWebhooks: 0,
+    systemHealth: 'healthy'
   });
-  const [settings, setSettings] = useState({ referral_active: true, maintenance_mode: false, pro_price: 3500 });
+  
+  const [settings, setSettings] = useState({ 
+    referral_active: true, 
+    maintenance_mode: false, 
+    pro_price: 3500,
+    email_notifications: true,
+    auto_backup: true,
+    debug_mode: false
+  });
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [manualInput, setManualInput] = useState({ id: '', days: 30, reason: 'GPay payment' });
-  const [giftInput, setGiftInput] = useState({ code: '', uses: 50 });
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'subscriptions'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'subscriptions' | 'analytics' | 'settings' | 'logs'>('overview');
   const [users, setUsers] = useState<any[]>([]);
   const [subscriptionLimits, setSubscriptionLimits] = useState({
-    free: { max_servers: 1, max_emails_per_day: 10, max_members_tracked: 100 },
-    pro: { max_servers: 10, max_emails_per_day: 100, max_members_tracked: 10000 }
+    free: { max_servers: 1, max_emails_per_day: 10, max_members_tracked: 100, max_discord_bots: 1 },
+    pro: { max_servers: 10, max_emails_per_day: 100, max_members_tracked: 10000, max_discord_bots: 5 }
+  });
+  const [systemLogs, setSystemLogs] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<'pro' | 'trial' | 'delete' | null>(null);
+
+  // Advanced state management
+  const [manualInput, setManualInput] = useState({ 
+    id: '', 
+    days: 30, 
+    reason: 'Manual addition by admin',
+    notifyUser: true
+  });
+  
+  const [giftInput, setGiftInput] = useState({ 
+    code: '', 
+    uses: 50,
+    days: 30,
+    expires: '',
+    type: 'pro'
   });
 
   useEffect(() => {
