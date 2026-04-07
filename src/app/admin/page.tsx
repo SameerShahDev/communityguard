@@ -354,7 +354,8 @@ export default function AdminPanel() {
                   </div>
                </div>
             </div>
-          </>
+          </div>
+        </>
       )}
 
       {activeTab === 'users' && (
@@ -380,8 +381,8 @@ export default function AdminPanel() {
           />
         </div>
       )}
-        </div>
-      </main>
     </div>
+  </main>
+</div>
   );
 }
