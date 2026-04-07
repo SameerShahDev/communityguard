@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { getReferralStats, getReferralLink } from "./actions";
 
-export const runtime = 'edge';
-
 export default function ReferralsPage() {
   const [stats, setStats] = useState({
     totalReferrals: 0,
