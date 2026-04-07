@@ -29,6 +29,7 @@ export default function DashboardPage() {
     userEmail: undefined
   });
   const [members, setMembers] = useState<{member_id: string; risk_level: string; score: number}[]>([]);
+  const [userId, setUserId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{sent: number, recovered: number} | null>(null);
@@ -76,6 +77,9 @@ export default function DashboardPage() {
         window.location.href = '/login';
         return;
       }
+      
+      // Store user ID for Discord OAuth
+      setUserId(session.user.id);
 
       const [statsRes, membersRes] = await Promise.all([
         getDashboardStats(),
@@ -92,7 +96,11 @@ export default function DashboardPage() {
   const handleConnectDiscord = async () => {
     setConnectError(null);
     try {
-      const url = await connectDiscord();
+      if (!userId) {
+        setConnectError("User not authenticated. Please login again.");
+        return;
+      }
+      const url = await connectDiscord(userId);
       if (url) {
         window.location.href = url;
       } else {

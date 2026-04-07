@@ -96,10 +96,13 @@ export async function getAtRiskMembers() {
   }
 }
 
-export async function connectDiscord() {
+export async function connectDiscord(userId: string) {
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
     const clientId = process.env.DISCORD_CLIENT_ID || '1489654332361019422';
+    
+    // Include user_id in state parameter for reliable auth
+    const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64');
     
     // Discord Bot Authorization URL (not user OAuth)
     const params = new URLSearchParams({
@@ -108,10 +111,11 @@ export async function connectDiscord() {
       scope: 'bot applications.commands identify guilds',
       redirect_uri: `${siteUrl}/api/auth/callback/discord`,
       response_type: 'code',
+      state: state
     });
     
     const discordUrl = `https://discord.com/oauth2/authorize?${params.toString()}`;
-    console.log('Generated Discord Bot URL:', discordUrl);
+    console.log('Generated Discord Bot URL with state:', discordUrl);
     
     return discordUrl;
   } catch (error) {
