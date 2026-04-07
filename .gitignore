@@ -37,6 +37,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# webhook (deployed separately to reduce bundle size)
+/webhook/
+/worker/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
