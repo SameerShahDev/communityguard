@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createEdgeClient } from '@/lib/supabase/edge';
+import { createEdgeClient, createServiceClient } from '@/lib/supabase/edge';
 
 export const runtime = 'edge';
 
@@ -18,7 +18,15 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${SITE_URL}/dashboard?error=missing_params`);
   }
 
-  const supabase = createEdgeClient();
+  // Use service client to bypass RLS
+  let supabase;
+  try {
+    supabase = createServiceClient();
+    console.log('Using service role client');
+  } catch (e) {
+    console.error('Service client failed, falling back to edge client:', e);
+    supabase = createEdgeClient();
+  }
   
   // Extract user_id from state parameter (primary method)
   let userId = '';
