@@ -252,30 +252,6 @@ export async function updateUserSubscription(
   }
 }
 
-// Delete user
-export async function deleteUser(userId: string): Promise<{ success: boolean; error: any }> {
-  try {
-    const supabase = await createClient();
-    
-    // First delete from public.users
-    const { error: publicError } = await supabase
-      .from("users")
-      .delete()
-      .eq("id", userId);
-
-    if (publicError) throw publicError;
-
-    // Then delete from auth.users (requires service role)
-    // Note: This would typically be done via admin API
-    console.log(`User ${userId} deleted from public.users`);
-
-    return { success: true, error: null };
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    return { success: false, error };
-  }
-}
-
 // Get subscription usage limits
 export async function getSubscriptionLimits(): Promise<{ 
   free: SubscriptionLimits; 
