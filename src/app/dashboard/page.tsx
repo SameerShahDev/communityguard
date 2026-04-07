@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
   const [serverSelected, setServerSelected] = useState(false);
-  const [stats, setStats] = useState<{ 
+  const [stats, setStats] = useState<{
     highRisk: number;
     silent: number;
     active: number;
@@ -19,14 +19,18 @@ export default function DashboardPage() {
     isPro: boolean;
     hasServer: boolean;
     userEmail: string | undefined;
-  }>({ 
-    highRisk: 0, 
-    silent: 0, 
-    active: 0, 
+    totalMembers: number;
+    serverName: string | null;
+  }>({
+    highRisk: 0,
+    silent: 0,
+    active: 0,
     proDays: 0,
     isPro: false,
     hasServer: false,
-    userEmail: undefined
+    userEmail: undefined,
+    totalMembers: 0,
+    serverName: null
   });
   const [members, setMembers] = useState<{member_id: string; risk_level: string; score: number}[]>([]);
   const [userId, setUserId] = useState<string>('');
@@ -273,7 +277,16 @@ export default function DashboardPage() {
         /* Server Connected - Full Dashboard */
         <div className="space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-blue-400 text-sm font-semibold">Total Members</span>
+                <span className="text-2xl">👥</span>
+              </div>
+              <p className="text-3xl font-extrabold text-white">{stats.totalMembers}</p>
+              <p className="text-xs text-slate-400 mt-1">{stats.serverName || 'Server'}</p>
+            </div>
+
             <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-red-400 text-sm font-semibold">High Risk</span>
@@ -295,10 +308,10 @@ export default function DashboardPage() {
             <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-emerald-400 text-sm font-semibold">Active</span>
-                <span className="text-2xl">👥</span>
+                <span className="text-2xl">✅</span>
               </div>
               <p className="text-3xl font-extrabold text-white">{stats.active}</p>
-              <p className="text-xs text-slate-400 mt-1">Total members</p>
+              <p className="text-xs text-slate-400 mt-1">Engaged members</p>
             </div>
 
             <div className="bg-gradient-to-br from-[#5865F2]/10 to-[#4752c4]/5 border border-[#5865F2]/20 rounded-2xl p-5">

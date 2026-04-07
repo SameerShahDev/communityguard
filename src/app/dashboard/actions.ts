@@ -10,6 +10,8 @@ export async function getDashboardStats(): Promise<{
   isPro: boolean;
   hasServer: boolean;
   userEmail: string | undefined;
+  totalMembers: number;
+  serverName: string | null;
 }> {
   try {
     const supabase = await createClient();
@@ -17,7 +19,7 @@ export async function getDashboardStats(): Promise<{
     // Fetch current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined };
+      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null };
     }
 
     // Fetch user's pro status
@@ -30,7 +32,7 @@ export async function getDashboardStats(): Promise<{
     const proDays = userData?.pro_days_left || 0;
     const isPro = proDays > 0;
 
-    // Fetch counts from churn_scores (with error handling for empty tables)
+    // Fetch counts from churn_scores
     const { count: highRisk } = await supabase
       .from("churn_scores")
       .select("*", { count: "exact", head: true })
@@ -41,31 +43,40 @@ export async function getDashboardStats(): Promise<{
       .select("*", { count: "exact", head: true })
       .eq("risk_level", "SILENT");
 
-    const { count: activeCount } = await supabase
-      .from("member_activity")
-      .select("*", { count: "exact", head: true });
-
-    // Check if user has connected a Discord server
+    // Check if user has connected a Discord server and get member count
     const { data: communities } = await supabase
       .from("communities")
-      .select("id, guild_id, guild_name")
+      .select("id, guild_id, guild_name, member_count")
       .eq("user_id", user.id)
       .limit(1);
     
     const hasServer = !!(communities && communities.length > 0);
+    const community = communities?.[0];
+    
+    // Get total members from member_activity if community exists
+    let totalMembers = 0;
+    if (community?.guild_id) {
+      const { count: memberCount } = await supabase
+        .from("member_activity")
+        .select("*", { count: "exact", head: true })
+        .eq("guild_id", community.guild_id);
+      totalMembers = memberCount || 0;
+    }
 
     return {
       highRisk: highRisk || 0,
       silent: moderateRisk || 0,
-      active: activeCount || 0,
+      active: totalMembers, // Use actual member count as active
       proDays,
       isPro,
       hasServer,
-      userEmail: user.email || undefined
+      userEmail: user.email || undefined,
+      totalMembers,
+      serverName: community?.guild_name || null
     };
   } catch (error) {
     console.error("Error in getDashboardStats:", error);
-    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined };
+    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null };
   }
 }
 
