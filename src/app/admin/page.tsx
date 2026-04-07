@@ -8,89 +8,35 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { 
   getAdminStats, 
-  getAdminSettings, 
-  updateAdminSettings, 
-  generateGiftCode, 
-  addManualCredits,
   getAllUsers,
-  getSubscriptionLimits,
   updateUserProDays,
   deleteUser,
   toggleUserAdmin,
-  updateSubscriptionLimits,
   exportUsers,
   getSystemLogs
 } from './actions';
-import { UserManagement, SubscriptionConfig, SystemAnalytics, EmailTemplates } from './components';
 
 export default function AdminPanel() {
-  const [stats, setStats] = useState<{ 
-    mrr: number; 
-    proUsers: number; 
-    trialUsers: number; 
-    totalUsers: number;
-    settings: any;
-    growthRate: number;
-    churnRate: number;
-    activeWebhooks: number;
-    systemHealth: 'healthy' | 'warning' | 'critical';
-  }>({ 
+  const [stats, setStats] = useState({ 
     mrr: 0, 
     proUsers: 0, 
     trialUsers: 0, 
     totalUsers: 0,
-    settings: null,
     growthRate: 0,
-    churnRate: 0,
-    activeWebhooks: 0,
-    systemHealth: 'healthy'
+    churnRate: 0
   });
-  
-  const [settings, setSettings] = useState({ 
-    referral_active: true, 
-    maintenance_mode: false, 
-    pro_price: 3500,
-    email_notifications: true,
-    auto_backup: true,
-    debug_mode: false
-  });
-  
+  const [users, setUsers] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'subscriptions' | 'analytics' | 'settings' | 'logs'>('overview');
-  const [users, setUsers] = useState<any[]>([]);
-  const [subscriptionLimits, setSubscriptionLimits] = useState({
-    free: { max_servers: 1, max_emails_per_day: 10, max_members_tracked: 100, max_discord_bots: 1 },
-    pro: { max_servers: 10, max_emails_per_day: 100, max_members_tracked: 10000, max_discord_bots: 5 }
-  });
-  const [systemLogs, setSystemLogs] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [bulkAction, setBulkAction] = useState<'pro' | 'trial' | 'delete' | null>(null);
-
-  // Advanced state management
-  const [manualInput, setManualInput] = useState({ 
-    id: '', 
-    days: 30, 
-    reason: 'Manual addition by admin',
-    notifyUser: true
-  });
-  
-  const [giftInput, setGiftInput] = useState({ 
-    code: '', 
-    uses: 50,
-    days: 30,
-    expires: '',
-    type: 'pro'
-  });
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs'>('overview');
 
   useEffect(() => {
     async function checkAdminAndLoad() {
       try {
         const supabase = createClient();
         
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } = {} } = await supabase.auth.getUser();
         if (!user) {
           window.location.href = '/login';
           return;
@@ -103,30 +49,12 @@ export default function AdminPanel() {
           .single();
 
         if (userError || !userData?.is_admin) {
-          console.log('User is not admin, redirecting...');
           window.location.href = '/dashboard';
           return;
         }
 
         setIsAdmin(true);
-
-        const [statsRes, settingsRes, usersRes, limitsRes] = await Promise.all([
-          getAdminStats(),
-          getAdminSettings(),
-          getAllUsers(),
-          getSubscriptionLimits()
-        ]);
-        
-        if (statsRes) setStats({ 
-          mrr: statsRes.mrr, 
-          proUsers: statsRes.proUsers, 
-          trialUsers: statsRes.trialUsers,
-          totalUsers: statsRes.totalUsers || 0,
-          settings: statsRes.settings || null
-        });
-        if (settingsRes.data) setSettings(settingsRes.data);
-        if (usersRes.users) setUsers(usersRes.users);
-        if (limitsRes) setSubscriptionLimits(limitsRes);
+        await loadData();
       } catch (error) {
         console.error("Failed to load admin data:", error);
       } finally {
@@ -136,184 +64,277 @@ export default function AdminPanel() {
     checkAdminAndLoad();
   }, []);
 
-  const handleToggleReferral = async () => {
-    try {
-      const newVal = !settings.referral_active;
-      setSettings(s => ({ ...s, referral_active: newVal }));
-      await updateAdminSettings({ referral_active: newVal });
-    } catch (error) {
-      console.error("Failed to update referral setting:", error);
-      alert("Failed to update setting");
+  async function loadData() {
+    const [statsRes, usersRes, logsRes] = await Promise.all([
+      getAdminStats(),
+      getAllUsers(),
+      getSystemLogs()
+    ]);
+    
+    if (statsRes) {
+      setStats({
+        mrr: statsRes.mrr || 0,
+        proUsers: statsRes.proUsers || 0,
+        trialUsers: statsRes.trialUsers || 0,
+        totalUsers: statsRes.totalUsers || 0,
+        growthRate: statsRes.growthRate || 0,
+        churnRate: statsRes.churnRate || 0
+      });
     }
-  };
+    if (usersRes.users) setUsers(usersRes.users);
+    if (logsRes.logs) setLogs(logsRes.logs);
+  }
 
-  const handleToggleMaintenance = async () => {
-    try {
-      const newVal = !settings.maintenance_mode;
-      setSettings(s => ({ ...s, maintenance_mode: newVal }));
-      await updateAdminSettings({ maintenance_mode: newVal });
-    } catch (error) {
-      console.error("Failed to update maintenance setting:", error);
-      alert("Failed to update setting");
+  async function handleUpdateProDays(userId: string, days: number) {
+    const result = await updateUserProDays(userId, days);
+    if (result.success) {
+      await loadData();
+      alert('User pro days updated!');
+    } else {
+      alert('Failed to update: ' + result.error);
     }
-  };
+  }
 
-  const handleUpdatePrice = async (price: number) => {
-    try {
-      setSettings(s => ({ ...s, pro_price: price }));
-      await updateAdminSettings({ pro_price: price });
-    } catch (error) {
-      console.error("Failed to update price:", error);
-      alert("Failed to update price");
+  async function handleDeleteUser(userId: string) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    const result = await deleteUser(userId);
+    if (result.success) {
+      await loadData();
+      alert('User deleted!');
+    } else {
+      alert('Failed to delete: ' + result.error);
     }
-  };
+  }
 
-  const handleAddCredits = async () => {
-    try {
-      const res = await addManualCredits(manualInput.id, manualInput.days, manualInput.reason);
-      if (res.success) alert("Credits added successfully!");
-      else alert(res.error || "Failed to add credits");
-    } catch (error) {
-      console.error("Failed to add credits:", error);
-      alert("Failed to add credits");
+  async function handleToggleAdmin(userId: string) {
+    const result = await toggleUserAdmin(userId);
+    if (result.success) {
+      await loadData();
+      alert('Admin status toggled!');
+    } else {
+      alert('Failed: ' + result.error);
     }
-  };
+  }
 
-  const handleGiftCode = async () => {
-    try {
-      const res = await generateGiftCode(giftInput.code, giftInput.uses);
-      if (res.data) alert("Code generated!");
-      else alert("Error generating code");
-    } catch (error) {
-      console.error("Failed to generate gift code:", error);
-      alert("Failed to generate code");
+  async function handleExport() {
+    const result = await exportUsers();
+    if (result.users) {
+      const csv = [
+        ['Email', 'Pro Days', 'Admin', 'Created At'].join(','),
+        ...result.users.map((u: any) => [u.email, u.pro_days_left, u.is_admin, u.created_at].join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'users.csv';
+      a.click();
     }
-  };
-  
-  if (isLoading) return <div className="min-h-screen bg-[#0c0e12] flex items-center justify-center text-white">Loading Admin...</div>;
+  }
 
-  if (!isAdmin) return (
-    <div className="min-h-screen bg-[#0c0e12] flex items-center justify-center text-white">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-slate-400 mb-6">You do not have permission to access this page.</p>
-        <Link href="/dashboard" className="px-6 py-3 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold rounded-xl">
-          Go to Dashboard
-        </Link>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!isAdmin) return null;
 
   return (
-    <div className="h-screen w-screen bg-[#0c0e12] text-[#f6f6fc] font-sans flex flex-col md:flex-row overflow-hidden">
-      <aside className="w-full md:w-64 bg-[#111318] border-b md:border-b-0 md:border-r border-white/5 p-4 flex flex-col shrink-0">
-        <div className="flex items-center justify-between md:justify-start gap-3 mb-6">
-          <Link href="/" className="w-8 h-8 rounded-lg bg-[#5865F2] flex items-center justify-center shadow-[0_0_15px_rgba(88,101,242,0.4)]">
-            <span className="text-white font-bold">C</span>
+    <div className="min-h-screen bg-slate-950 text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Panel</h1>
+            <p className="text-slate-400">Manage your CommunityGuard instance</p>
+          </div>
+          <Link href="/dashboard" className="text-blue-400 hover:text-blue-300">
+            Back to Dashboard →
           </Link>
-          <span className="font-bold tracking-tight hidden md:block">CommunityGuard</span>
         </div>
 
-        <nav className="hidden md:flex flex-col gap-2 flex-1">
-          <Link href="/dashboard" className="px-4 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-colors">
-            Overview
-          </Link>
-          <Link href="/dashboard/referrals" className="px-4 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 font-medium transition-colors">
-            Referrals
-          </Link>
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <Link href="/admin" className="px-4 py-2.5 rounded-lg bg-[#5865F2]/10 text-[#a2a9fa] font-medium border border-[#5865F2]/20">
-              Admin Panel
-            </Link>
-          </div>
-        </nav>
-
-        <div className="mt-auto pt-4">
-          <Link href="/dashboard" className="text-sm text-slate-400 hover:text-white transition-colors">
-            Back to Dashboard
-          </Link>
+        {/* Navigation */}
+        <div className="flex space-x-4 mb-8">
+          {['overview', 'users', 'logs'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-4 py-2 rounded-lg font-medium capitalize ${
+                activeTab === tab
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:text-white'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
-      </aside>
 
-      <main className="flex-1 p-4 md:p-6 overflow-hidden">
-        <div className="h-full w-full overflow-y-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">Super Admin Control</h1>
-            <p className="text-slate-400">Manage platform revenue, limits, and user configurations.</p>
-          </div>
-
-          <div className="flex gap-2 mb-6">
-            <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'overview' ? 'bg-[#5865F2] text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}>Overview</button>
-            <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'users' ? 'bg-[#5865F2] text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}>Users ({stats.totalUsers})</button>
-            <button onClick={() => setActiveTab('subscriptions')} className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'subscriptions' ? 'bg-[#5865F2] text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}>Subscriptions</button>
-          </div>
-
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[#111318] border border-emerald-500/20 rounded-2xl p-6"><p className="text-slate-400 text-sm font-semibold uppercase mb-2">Total MRR</p><h2 className="text-3xl font-extrabold text-white">₹{(stats.mrr / 1000).toFixed(1)}k</h2></div>
-                <div className="bg-[#111318] border border-[#5865F2]/20 rounded-2xl p-6"><p className="text-slate-400 text-sm font-semibold uppercase mb-2">Pro Users</p><h2 className="text-3xl font-extrabold text-white">{stats.proUsers}</h2></div>
-                <div className="bg-[#111318] border border-amber-500/20 rounded-2xl p-6"><p className="text-slate-400 text-sm font-semibold uppercase mb-2">Trial Users</p><h2 className="text-3xl font-extrabold text-white">{stats.trialUsers}</h2></div>
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p className="text-slate-400 text-sm">Total Users</p>
+                <p className="text-2xl font-bold">{stats.totalUsers}</p>
               </div>
-
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <div className="bg-[#111318] border border-white/5 rounded-3xl p-6">
-                  <h2 className="text-xl font-bold mb-6">System Controls</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-                      <div><h3 className="font-semibold text-white">Referral Program</h3><p className="text-xs text-slate-400">Users can invite others</p></div>
-                      <button onClick={handleToggleReferral} className={`w-12 h-6 rounded-full relative ${settings.referral_active ? 'bg-[#5865F2]' : 'bg-slate-700'}`}><span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${settings.referral_active ? 'left-7' : 'left-1'}`} /></button>
-                    </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-                      <div><h3 className="font-semibold text-white">Maintenance Mode</h3><p className="text-xs text-slate-400">Blocks non-admin logins</p></div>
-                      <button onClick={handleToggleMaintenance} className={`w-12 h-6 rounded-full relative ${settings.maintenance_mode ? 'bg-red-500' : 'bg-slate-700'}`}><span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${settings.maintenance_mode ? 'left-7' : 'left-1'}`} /></button>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/5">
-                      <label className="block font-semibold text-white mb-2">Pro Price (₹)</label>
-                      <div className="flex gap-2">
-                        <input type="number" value={settings.pro_price} onChange={(e) => handleUpdatePrice(Number(e.target.value))} className="bg-[#0c0e12] border border-white/10 rounded-lg px-3 py-2 w-32 text-white" />
-                        <button className="px-4 py-2 bg-[#5865F2] rounded-lg text-sm font-semibold">Save</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="bg-[#111318] border border-white/5 rounded-3xl p-6">
-                    <h2 className="text-xl font-bold mb-4">Gift Codes</h2>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="e.g. JEE100" value={giftInput.code} onChange={(e) => setGiftInput(prev => ({ ...prev, code: e.target.value }))} className="flex-1 bg-[#0c0e12] border border-white/10 rounded-xl px-4 py-2 text-white" />
-                      <input type="number" placeholder="Uses" value={giftInput.uses} onChange={(e) => setGiftInput(prev => ({ ...prev, uses: Number(e.target.value) }))} className="w-20 bg-[#0c0e12] border border-white/10 rounded-xl px-3 py-2 text-white" />
-                      <button onClick={handleGiftCode} className="px-4 py-2 bg-indigo-500 rounded-xl font-semibold">Generate</button>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#111318] border border-white/5 rounded-3xl p-6">
-                    <h2 className="text-xl font-bold mb-4">Manual Credits</h2>
-                    <div className="space-y-3">
-                      <input type="text" placeholder="User Email or ID" value={manualInput.id} onChange={(e) => setManualInput(prev => ({ ...prev, id: e.target.value }))} className="w-full bg-[#0c0e12] border border-white/10 rounded-xl px-4 py-2 text-white" />
-                      <input type="text" placeholder="Reason" value={manualInput.reason} onChange={(e) => setManualInput(prev => ({ ...prev, reason: e.target.value }))} className="w-full bg-[#0c0e12] border border-white/10 rounded-xl px-4 py-2 text-white" />
-                      <button onClick={handleAddCredits} className="w-full px-4 py-2 bg-emerald-500 rounded-xl font-semibold">+30 Days Pro</button>
-                    </div>
-                  </div>
-                </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p className="text-slate-400 text-sm">Pro Users</p>
+                <p className="text-2xl font-bold text-emerald-400">{stats.proUsers}</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p className="text-slate-400 text-sm">Trial Users</p>
+                <p className="text-2xl font-bold text-amber-400">{stats.trialUsers}</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p className="text-slate-400 text-sm">MRR</p>
+                <p className="text-2xl font-bold text-blue-400">${stats.mrr}</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p className="text-slate-400 text-sm">Growth</p>
+                <p className="text-2xl font-bold text-green-400">+{stats.growthRate.toFixed(1)}%</p>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p className="text-slate-400 text-sm">Churn</p>
+                <p className="text-2xl font-bold text-red-400">{stats.churnRate.toFixed(1)}%</p>
               </div>
             </div>
-          )}
 
-          {activeTab === 'users' && (
-            <div className="bg-[#0c0e12] rounded-2xl p-4">
-              <UserManagement users={users} onRefresh={async () => { const res = await getAllUsers(); if (res.users) setUsers(res.users); }} />
+            {/* Quick Actions */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleExport}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium"
+                >
+                  Export Users (CSV)
+                </button>
+                <button
+                  onClick={loadData}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium"
+                >
+                  Refresh Data
+                </button>
+              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === 'subscriptions' && (
-            <div className="bg-[#0c0e12] rounded-2xl p-4">
-              <SubscriptionConfig limits={subscriptionLimits} onRefresh={async () => { const res = await getSubscriptionLimits(); if (res) setSubscriptionLimits(res); }} />
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+              <h2 className="text-lg font-semibold">All Users ({users.length})</h2>
+              <button
+                onClick={handleExport}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+              >
+                Export CSV
+              </button>
             </div>
-          )}
-        </div>
-      </main>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-800">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Pro Days</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Admin</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Created</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-slate-800/50">
+                      <td className="px-4 py-3 text-sm">{user.email}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={user.pro_days_left > 0 ? 'text-emerald-400' : 'text-slate-400'}>
+                          {user.pro_days_left}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {user.is_admin ? (
+                          <span className="text-orange-400 font-medium">Admin</span>
+                        ) : (
+                          <span className="text-slate-500">User</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-400">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleUpdateProDays(user.id, 30)}
+                            className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded hover:bg-emerald-600/30"
+                            title="Add 30 days"
+                          >
+                            +30d
+                          </button>
+                          <button
+                            onClick={() => handleToggleAdmin(user.id)}
+                            className="px-2 py-1 bg-orange-600/20 text-orange-400 rounded hover:bg-orange-600/30"
+                            title="Toggle admin"
+                          >
+                            {user.is_admin ? '↓' : '↑'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="px-2 py-1 bg-red-600/20 text-red-400 rounded hover:bg-red-600/30"
+                            title="Delete user"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Logs Tab */}
+        {activeTab === 'logs' && (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+            <h2 className="text-lg font-semibold mb-4">System Logs</h2>
+            <div className="space-y-2">
+              {logs.map((log, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg ${
+                    log.level === 'error' ? 'bg-red-500/10 border border-red-500/20' :
+                    log.level === 'warning' ? 'bg-amber-500/10 border border-amber-500/20' :
+                    'bg-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-medium ${
+                      log.level === 'error' ? 'text-red-400' :
+                      log.level === 'warning' ? 'text-amber-400' :
+                      'text-blue-400'
+                    }`}>
+                      {log.level.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-300 mt-1">{log.message}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
