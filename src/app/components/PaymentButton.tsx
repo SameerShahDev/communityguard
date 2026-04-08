@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { createStripeCheckout, createBillingPortalSession } from '../dashboard/actions';
+import { createCashfreeCheckout, createCustomerPortalSession } from '../dashboard/actions';
 
 interface PaymentButtonProps {
   userId: string;
@@ -26,7 +26,7 @@ export function PaymentButton({
       setIsLoading(true);
       setError(null);
 
-      const result = await createStripeCheckout(userId);
+      const result = await createCashfreeCheckout(userId);
       
       if (result.success && result.url) {
         window.location.href = result.url;
@@ -177,7 +177,7 @@ export function PricingCard({
       setIsLoading(true);
       setError(null);
 
-      const result = await createStripeCheckout(userId, plan.priceId);
+      const result = await createCashfreeCheckout(userId, plan.priceId);
       
       if (result.success && result.url) {
         window.location.href = result.url;

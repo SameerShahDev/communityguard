@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Mail, Phone, Instagram, Linkedin, Facebook, Youtube } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 
 export const metadata = {
   title: 'Contact Us - CommunityGuard',
@@ -35,11 +35,11 @@ export default function ContactPage() {
                 </a>
               </div>
               <h3 className="text-xl font-bold text-white mt-8 mb-4">Follow Us</h3>
-              <div className="flex gap-4">
-                <a href="https://www.instagram.com/sameershahdev/" target="_blank" rel="noopener" className="text-slate-400 hover:text-pink-500"><Instagram className="w-6 h-6" /></a>
-                <a href="https://www.linkedin.com/in/sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-500"><Linkedin className="w-6 h-6" /></a>
-                <a href="https://www.facebook.com/Sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-600"><Facebook className="w-6 h-6" /></a>
-                <a href="https://youtube.com/@sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-red-500"><Youtube className="w-6 h-6" /></a>
+              <div className="flex gap-4 text-sm">
+                <a href="https://www.instagram.com/sameershahdev/" target="_blank" rel="noopener" className="text-slate-400 hover:text-pink-500">Instagram</a>
+                <a href="https://www.linkedin.com/in/sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-500">LinkedIn</a>
+                <a href="https://www.facebook.com/Sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-600">Facebook</a>
+                <a href="https://youtube.com/@sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-red-500">YouTube</a>
               </div>
             </div>
             <div>
