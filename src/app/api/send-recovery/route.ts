@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // Brevo API configuration
 const BREVO_API_KEY = process.env.BREVO_API_KEY!;
