@@ -304,7 +304,9 @@ export async function getAtRiskMembers() {
         member_id,
         risk_level,
         score,
-        updated_at
+        updated_at,
+        username,
+        last_message
       `)
       .order("score", { ascending: false })
       .limit(10);
