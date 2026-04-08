@@ -72,7 +72,6 @@ export const stripe = new Stripe(stripeConfig.secretKey, {
 export async function createCheckoutSession(userId: string, priceId: string) {
   try {
     const session = await stripe.checkout.sessions.create({
-      customer_email: null, // Will be filled from user data
       billing_address_collection: 'auto',
       line_items: [
         {
