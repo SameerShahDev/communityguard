@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'cancelled' | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [serverSelected, setServerSelected] = useState(false);
   
   // Advanced states
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
