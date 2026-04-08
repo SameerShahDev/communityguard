@@ -204,16 +204,22 @@ export async function getWeeklyActivity(userId: string) {
   }
 }
 
-export async function getDashboardStats(): Promise<{ 
-  highRisk: number; 
-  silent: number; 
-  active: number; 
-  proDays: number; 
+export async function getDashboardStats(): Promise<{
+  highRisk: number;
+  silent: number;
+  active: number;
+  proDays: number;
   isPro: boolean;
   hasServer: boolean;
   userEmail: string | undefined;
   totalMembers: number;
   serverName: string | null;
+  growthRate: number;
+  engagementRate: number;
+  weeklyActivity: number[];
+  topPerformers: any[];
+  recentAlerts: any[];
+  systemHealth: 'excellent' | 'good' | 'warning' | 'critical';
 }> {
   try {
     const supabase = await createClient();
@@ -221,7 +227,7 @@ export async function getDashboardStats(): Promise<{
     // Fetch current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null };
+      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null, growthRate: 0, engagementRate: 0, weeklyActivity: [0,0,0,0,0,0,0], topPerformers: [], recentAlerts: [], systemHealth: 'good' };
     }
 
     // Fetch user's pro status
@@ -274,11 +280,17 @@ export async function getDashboardStats(): Promise<{
       hasServer,
       userEmail: user.email || undefined,
       totalMembers,
-      serverName: community?.guild_name || null
+      serverName: community?.guild_name || null,
+      growthRate: 0,
+      engagementRate: 0,
+      weeklyActivity: [0,0,0,0,0,0,0],
+      topPerformers: [],
+      recentAlerts: [],
+      systemHealth: 'good'
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in getDashboardStats:", error);
-    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null };
+    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null, growthRate: 0, engagementRate: 0, weeklyActivity: [0,0,0,0,0,0,0], topPerformers: [], recentAlerts: [], systemHealth: 'good' };
   }
 }
 
