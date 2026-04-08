@@ -133,8 +133,7 @@ export async function POST(request: NextRequest) {
               </div>
             </body>
             </html>
-          `
-        };
+          `;
 
         // Send email via Brevo API
         const data = await brevoClient.sendTransacEmail(sendSmtpEmail);
