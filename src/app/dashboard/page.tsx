@@ -106,7 +106,7 @@ export default function DashboardPage() {
       newUrl.searchParams.delete('payment');
       window.history.replaceState({}, '', newUrl.toString());
       // Refresh data after a short delay to get updated pro status
-      setTimeout(() => loadDashboardData(), 2000);
+      setTimeout(() => window.location.reload(), 2000);
     } else if (payment === 'cancelled') {
       setPaymentStatus('cancelled');
       // Clean URL
@@ -115,7 +115,7 @@ export default function DashboardPage() {
       window.history.replaceState({}, '', newUrl.toString());
     }
 
-    loadDashboardData();
+    // Data loaded in useEffect above
   }, [searchParams]);
 
   useEffect(() => {
