@@ -1,9 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createCheckoutSession, createCustomerPortalSession, getSubscriptionStatus } from "@/lib/stripe";
+import { createCheckoutSession, createCustomerPortalSession, getSubscriptionStatus } from "@/lib/cashfree";
 
-export async function createStripeCheckout(userId: string, priceId?: string) {
+export async function createCashfreeCheckout(userId: string, priceId?: string) {
   try {
     const supabase = await createClient();
     

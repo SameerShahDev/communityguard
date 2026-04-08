@@ -6,7 +6,7 @@ export const runtime = 'edge';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails, createStripeCheckout, getMemberActivity, getServerMetrics, exportData } from './actions';
+import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails, createCashfreeCheckout, getMemberActivity, getServerMetrics, exportData } from './actions';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
@@ -167,7 +167,7 @@ export default function DashboardPage() {
     setIsUpgrading(true);
     setConnectError(null);
     try {
-      const result = await createStripeCheckout(userId);
+      const result = await createCashfreeCheckout(userId);
       if (result.url) {
         window.location.href = result.url;
       } else {
