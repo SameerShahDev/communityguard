@@ -183,11 +183,22 @@ export default function DashboardPage() {
   const handleSendEmails = async () => {
     setIsSending(true);
     setSendResult(null);
-    const res = await sendRecoveryEmails();
-    if (res.sent !== undefined) {
-      setSendResult({ sent: res.sent, recovered: res.recovered });
-    } else {
-      alert(res.error || "Failed to send emails");
+    try {
+      const response = await fetch('/api/send-recovery', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const result = await response.json();
+      
+      if (response.ok && result.sent !== undefined) {
+        setSendResult({ sent: result.sent, recovered: result.sent });
+        setConnectSuccess(`✅ ${result.sent} emails sent! ${result.failed > 0 ? `${result.failed} failed` : ''}`);
+      } else {
+        setConnectError(result.error || result.message || "Failed to send emails");
+      }
+    } catch (error) {
+      console.error('Send emails error:', error);
+      setConnectError("Network error. Please try again.");
     }
     setIsSending(false);
   };
