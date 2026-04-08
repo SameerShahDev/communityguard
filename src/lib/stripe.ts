@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/server';
+
 // Real Stripe Configuration - Replace with your actual keys
 export const stripeConfig = {
   // Test Keys (replace with your actual test keys)
