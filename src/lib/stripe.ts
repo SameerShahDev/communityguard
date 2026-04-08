@@ -279,7 +279,12 @@ async function handleRenewalPayment(invoice: Stripe.Invoice) {
   
   try {
     // Get customer's subscription
-    const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+    const subscriptionId = invoice.subscription;
+    if (!subscriptionId) {
+      console.error('No subscription found in invoice');
+      return;
+    }
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     const customerId = subscription.customer as string;
 
     // Find user by customer ID
