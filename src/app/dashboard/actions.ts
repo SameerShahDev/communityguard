@@ -3,6 +3,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { createCheckoutSession, createCustomerPortalSession, getSubscriptionStatus } from "@/lib/cashfree";
 
+// Helper function to generate recovery email content
+function generateRecoveryEmail(username: string, serverName: string): string {
+  return `
+    Hi ${username},
+    
+    We noticed you haven't been active on ${serverName} Discord server lately.
+    
+    Your community misses you! Come back and reconnect with your friends.
+    
+    Best regards,
+    CommunityGuard Team
+  `;
+}
+
+// Mock email sending function
+async function sendEmail(to: string, subject: string, content: string): Promise<void> {
+  // This would integrate with your email service (SendGrid, AWS SES, etc.)
+  console.log(`Sending email to ${to}: ${subject}`);
+  // Mock implementation
+  await new Promise(resolve => setTimeout(resolve, 100));
+}
+
 export async function createCashfreeCheckout(userId: string, priceId?: string) {
   try {
     const supabase = await createClient();
@@ -61,8 +83,30 @@ export async function createBillingPortalSession(userId: string) {
 
 export async function getUserSubscriptionStatus(userId: string) {
   try {
-    const result = await getSubscriptionStatus(userId);
-    return result;
+    const supabase = await createClient();
+    
+    // Get subscription status using Supabase function
+    const { data: subscriptionData, error } = await supabase
+      .rpc('get_user_subscription_status', { p_user_id: userId });
+
+    if (error) {
+      console.error("Error getting subscription status:", error);
+      return { active: false, daysLeft: 0 };
+    }
+
+    const subscription = subscriptionData?.[0];
+    if (!subscription) {
+      return { active: false, daysLeft: 0 };
+    }
+
+    return {
+      active: subscription.is_active,
+      daysLeft: subscription.days_left,
+      planName: subscription.plan_name,
+      billingCycle: subscription.billing_cycle,
+      priceInr: subscription.price_inr,
+      endsAt: subscription.ends_at
+    };
   } catch (error) {
     console.error("Error getting subscription status:", error);
     return { active: false, daysLeft: 0 };
@@ -99,78 +143,39 @@ export async function getServerMetrics(userId: string) {
   try {
     const supabase = await createClient();
     
-    // Get community info
-    const { data: community, error: communityError } = await supabase
+    // Get user's server
+    const { data: server, error: serverError } = await supabase
       .from("communities")
-      .select("*")
+      .select("guild_id, guild_name, member_count")
       .eq("user_id", userId)
       .single();
 
-    if (communityError) throw communityError;
-    
-    // Get member metrics
-    const { data: members, error: membersError } = await supabase
-      .from("member_activity")
-      .select("risk_level, score, last_message_at")
-      .eq("user_id", userId);
+    if (serverError || !server) {
+      return { error: "Server not found" };
+    }
 
-    if (membersError) throw membersError;
-    
-    // Calculate metrics
-    const totalMembers = members?.length || 0;
-    const highRiskMembers = members?.filter(m => m.risk_level === 'high').length || 0;
-    const avgRiskScore = members?.reduce((acc, m) => acc + m.score, 0) / totalMembers || 0;
-    
-    const metrics = {
-      community,
+    // Get activity metrics
+    const { data: activity, error: activityError } = await supabase
+      .from("member_activity")
+      .select("risk_level, last_message_at")
+      .eq("guild_id", server.guild_id);
+
+    if (activityError) throw activityError;
+
+    const totalMembers = activity?.length || 0;
+    const activeMembers = activity?.filter(m => m.risk_level === 'LOW_RISK').length || 0;
+    const atRiskMembers = activity?.filter(m => m.risk_level === 'HIGH_RISK').length || 0;
+
+    return {
+      serverName: server.guild_name,
       totalMembers,
-      highRiskMembers,
-      avgRiskScore,
-      healthScore: Math.max(0, 100 - (highRiskMembers * 10) - (avgRiskScore / 2))
+      activeMembers,
+      atRiskMembers,
+      activity: activity || []
     };
-    
-    return { metrics };
   } catch (error: any) {
     console.error("Error fetching server metrics:", error);
-    return { metrics: null, error: error.message };
-  }
-}
-
-export async function exportData(userId: string, format: 'csv' | 'json') {
-  try {
-    const supabase = await createClient();
-    
-    // Get all member data
-    const { data: members, error: membersError } = await supabase
-      .from("member_activity")
-      .select("*")
-      .eq("user_id", userId);
-
-    if (membersError) throw membersError;
-    
-    let data: string;
-    
-    if (format === 'csv') {
-      // Convert to CSV
-      const headers = ['Username', 'Risk Level', 'Score', 'Last Message', 'Member ID'];
-      const rows = members?.map(m => [
-        m.username || 'Unknown',
-        m.risk_level,
-        m.score,
-        new Date(m.last_message_at).toLocaleDateString(),
-        m.member_id
-      ]) || [];
-      
-      data = [headers, ...rows].map(row => row.join(',')).join('\n');
-    } else {
-      // Convert to JSON
-      data = JSON.stringify(members || [], null, 2);
-    }
-    
-    return { success: true, data };
-  } catch (error: any) {
-    console.error("Error exporting data:", error);
-    return { success: false, error: error.message };
+    return { error: error.message };
   }
 }
 
@@ -178,29 +183,30 @@ export async function getWeeklyActivity(userId: string) {
   try {
     const supabase = await createClient();
     
+    // Get last 7 days of activity
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     const { data: activity, error } = await supabase
       .from("member_activity")
-      .select("last_message_at")
+      .select("created_at")
       .eq("user_id", userId)
-      .gte("last_message_at", sevenDaysAgo.toISOString());
+      .gte("created_at", sevenDaysAgo.toISOString());
 
     if (error) throw error;
-    
+
     // Group by day of week
-    const weeklyData = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
+    const weeklyData = [0, 0, 0, 0, 0, 0]; // Sun, Mon, Tue, Wed, Thu, Fri, Sat
     
     activity?.forEach(item => {
-      const day = new Date(item.last_message_at).getDay();
-      weeklyData[day === 0 ? 6 : day - 1]++; // Convert Sun=0 to Sat=6
+      const dayOfWeek = new Date(item.created_at).getDay();
+      weeklyData[dayOfWeek]++;
     });
-    
+
     return weeklyData;
   } catch (error: any) {
     console.error("Error fetching weekly activity:", error);
-    return [0, 0, 0, 0, 0, 0, 0];
+    return [0, 0, 0, 0, 0, 0];
   }
 }
 
@@ -220,6 +226,10 @@ export async function getDashboardStats(): Promise<{
   topPerformers: any[];
   recentAlerts: any[];
   systemHealth: 'excellent' | 'good' | 'warning' | 'critical';
+  planName: string | null;
+  billingCycle: string | null;
+  priceInr: number | null;
+  endsAt: string | null;
 }> {
   try {
     const supabase = await createClient();
@@ -227,26 +237,41 @@ export async function getDashboardStats(): Promise<{
     // Fetch current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null, growthRate: 0, engagementRate: 0, weeklyActivity: [0,0,0,0,0,0,0], topPerformers: [], recentAlerts: [], systemHealth: 'good' };
+      return { 
+        highRisk: 0, 
+        silent: 0, 
+        active: 0, 
+        proDays: 0, 
+        isPro: false, 
+        hasServer: false, 
+        userEmail: undefined, 
+        totalMembers: 0, 
+        serverName: null, 
+        growthRate: 0, 
+        engagementRate: 0, 
+        weeklyActivity: [0,0,0,0,0], 
+        topPerformers: [], 
+        recentAlerts: [], 
+        systemHealth: 'good',
+        planName: null, 
+        billingCycle: null, 
+        priceInr: null, 
+        endsAt: null 
+      };
     }
 
-    // Fetch user's pro status
-    const { data: userData } = await supabase
-      .from("users")
-      .select("pro_days_left")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const proDays = userData?.pro_days_left || 0;
-    const isPro = proDays > 0;
+    // Get subscription status using Supabase function
+    const subscriptionStatus = await getUserSubscriptionStatus(user.id);
+    const proDays = subscriptionStatus.daysLeft || 0;
+    const isPro = subscriptionStatus.active;
 
     // Fetch counts from churn_scores
-    const { count: highRisk } = await supabase
+    const { count: highRiskCount } = await supabase
       .from("churn_scores")
       .select("*", { count: "exact", head: true })
       .eq("risk_level", "HIGH_RISK");
 
-    const { count: moderateRisk } = await supabase
+    const { count: moderateRiskCount } = await supabase
       .from("churn_scores")
       .select("*", { count: "exact", head: true })
       .eq("risk_level", "SILENT");
@@ -262,35 +287,59 @@ export async function getDashboardStats(): Promise<{
     const community = communities?.[0];
     
     // Get total members from member_activity if community exists
-    let totalMembers = 0;
+    let totalMembersCount = 0;
     if (community?.guild_id) {
       const { count: memberCount } = await supabase
         .from("member_activity")
         .select("*", { count: "exact", head: true })
         .eq("guild_id", community.guild_id);
-      totalMembers = memberCount || 0;
+      totalMembersCount = memberCount || 0;
     }
 
     return {
-      highRisk: highRisk || 0,
-      silent: moderateRisk || 0,
-      active: totalMembers, // Use actual member count as active
+      highRisk: highRiskCount || 0,
+      silent: moderateRiskCount || 0,
+      active: totalMembersCount, // Use actual member count as active
       proDays,
       isPro,
       hasServer,
       userEmail: user.email || undefined,
-      totalMembers,
+      totalMembers: totalMembersCount,
       serverName: community?.guild_name || null,
       growthRate: 0,
       engagementRate: 0,
-      weeklyActivity: [0,0,0,0,0,0,0],
+      weeklyActivity: [0,0,0,0,0],
       topPerformers: [],
       recentAlerts: [],
-      systemHealth: 'good'
+      systemHealth: 'good',
+      planName: subscriptionStatus.planName,
+      billingCycle: subscriptionStatus.billingCycle,
+      priceInr: subscriptionStatus.priceInr,
+      endsAt: subscriptionStatus.endsAt
     };
   } catch (error: any) {
     console.error("Error in getDashboardStats:", error);
-    return { highRisk: 0, silent: 0, active: 0, proDays: 0, isPro: false, hasServer: false, userEmail: undefined, totalMembers: 0, serverName: null, growthRate: 0, engagementRate: 0, weeklyActivity: [0,0,0,0,0,0,0], topPerformers: [], recentAlerts: [], systemHealth: 'good' };
+    return { 
+      highRisk: 0, 
+      silent: 0, 
+      active: 0, 
+      proDays: 0, 
+      isPro: false, 
+      hasServer: false, 
+      userEmail: undefined, 
+      totalMembers: 0, 
+      serverName: null, 
+      growthRate: 0, 
+      engagementRate: 0, 
+      weeklyActivity: [0,0,0,0,0,0], 
+      topPerformers: [], 
+      recentAlerts: [], 
+      systemHealth: 'good',
+      planName: null, 
+      billingCycle: null, 
+      priceInr: null, 
+      endsAt: null 
+    };
   }
 }
 
@@ -351,23 +400,168 @@ export async function connectDiscord(userId: string) {
   }
 }
 
-export async function sendRecoveryEmails() {
+export async function createSubscription(
+  userId: string, 
+  planId: string, 
+  billingCycle: 'monthly' | 'yearly',
+  paymentDetails: any
+) {
   try {
-    const res = await fetch('/api/emails/send-recovery', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    const supabase = await createClient();
     
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error || "Failed to send emails");
+    // Plan details
+    const plans: Record<string, { name: string; price_inr: number; price_usd: number }> = {
+      starter_monthly: { name: 'CommunityGuard Starter - Monthly', price_inr: 29900, price_usd: 359 },
+      starter_yearly: { name: 'CommunityGuard Starter - Yearly', price_inr: 299000, price_usd: 3590 },
+      pro_monthly: { name: 'CommunityGuard Professional - Monthly', price_inr: 49900, price_usd: 599 },
+      pro_yearly: { name: 'CommunityGuard Professional - Yearly', price_inr: 499000, price_usd: 5990 },
+      enterprise_monthly: { name: 'CommunityGuard Enterprise - Monthly', price_inr: 99900, price_usd: 1199 },
+      enterprise_yearly: { name: 'CommunityGuard Enterprise - Yearly', price_inr: 999000, price_usd: 11990 }
+    };
+    
+    const plan = plans[`${planId}_${billingCycle}`];
+    if (!plan) {
+      return { success: false, error: 'Invalid plan selected' };
     }
+
+    // Calculate end date
+    const now = new Date();
+    const endsAt = billingCycle === 'yearly' 
+      ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+      : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+    // Insert subscription
+    const { data: subscription, error } = await supabase
+      .from('subscriptions')
+      .insert({
+        user_id: userId,
+        plan_id: planId,
+        plan_name: plan.name,
+        status: 'active',
+        billing_cycle: billingCycle,
+        price_inr: plan.price_inr,
+        price_usd: plan.price_usd,
+        starts_at: now.toISOString(),
+        ends_at: endsAt.toISOString(),
+        payment_provider: 'cashfree',
+        external_subscription_id: paymentDetails?.order_id || null,
+        last_payment_at: now.toISOString(),
+        next_billing_at: endsAt.toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Create subscription error:', error);
+      return { success: false, error: 'Failed to create subscription' };
+    }
+
+    return { success: true, subscription };
+  } catch (error) {
+    console.error('Create subscription error:', error);
+    return { success: false, error: 'Failed to create subscription' };
+  }
+}
+
+export async function cancelSubscription(userId: string, reason?: string) {
+  try {
+    const supabase = await createClient();
     
-    return await res.json();
-  } catch (error: any) {
-    console.error("Send recovery emails error:", error);
-    return { error: error.message || "Failed to send emails", sent: 0, recovered: 0 };
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({ 
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: reason,
+        auto_renew: false
+      })
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    if (error) {
+      console.error('Cancel subscription error:', error);
+      return { success: false, error: 'Failed to cancel subscription' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Cancel subscription error:', error);
+    return { success: false, error: 'Failed to cancel subscription' };
+  }
+}
+
+export async function upgradeSubscription(userId: string, newPlanId: string, billingCycle: 'monthly' | 'yearly') {
+  try {
+    const supabase = await createClient();
+    
+    // Cancel current subscription
+    await cancelSubscription(userId, 'Upgrading to new plan');
+    
+    // Create new subscription
+    return await createSubscription(userId, newPlanId, billingCycle, {});
+  } catch (error) {
+    console.error('Upgrade subscription error:', error);
+    return { success: false, error: 'Failed to upgrade subscription' };
+  }
+}
+
+export async function sendRecoveryEmails(userId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Get user's server details and at-risk members
+    const { data: serverData, error: serverError } = await supabase
+      .from('user_servers')
+      .select('server_id, server_name')
+      .eq('user_id', userId)
+      .single();
+
+    if (serverError || !serverData) {
+      return { success: false, error: 'Server not found' };
+    }
+
+    // Get at-risk members
+    const { data: atRiskMembers, error: membersError } = await supabase
+      .from('members')
+      .select('member_id, risk_level, username, email')
+      .eq('server_id', serverData.server_id)
+      .in('risk_level', ['HIGH_RISK', 'SILENT'])
+      .limit(50);
+
+    if (membersError) {
+      return { success: false, error: 'Failed to fetch members' };
+    }
+
+    // Send recovery emails (mock implementation)
+    const emailPromises = atRiskMembers?.map(async (member) => {
+      const emailContent = generateRecoveryEmail(member.username, serverData.server_name);
+      return sendEmail(member.email, 'We miss you on Discord!', emailContent);
+    }) || [];
+
+    const results = await Promise.allSettled(emailPromises);
+    const sent = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    // Track email sending
+    const recipientEmails = atRiskMembers?.map(m => m.email).filter(Boolean) || [];
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/email-tracking`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          emailsSent: sent,
+          recipientEmails,
+          campaignType: 'recovery'
+        })
+      });
+    } catch (trackingError) {
+      console.error('Failed to track emails:', trackingError);
+    }
+
+    return { success: true, sent, failed };
+  } catch (error) {
+    console.error('Send recovery emails error:', error);
+    return { success: false, error: 'Failed to send recovery emails' };
   }
 }

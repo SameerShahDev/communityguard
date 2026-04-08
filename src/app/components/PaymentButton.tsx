@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { createCashfreeCheckout, createCustomerPortalSession } from '../dashboard/actions';
+import { createCashfreeCheckout, createBillingPortalSession } from '../dashboard/actions';
 
 interface PaymentButtonProps {
   userId: string;

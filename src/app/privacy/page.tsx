@@ -234,7 +234,7 @@ export default function PrivacyPage() {
         {/* Bottom Made By */}
         <div className="text-center mt-8">
           <p className="text-slate-600 text-sm">
-            Made with ❤️ by <span className="text-[#5865F2] font-semibold">Sameer Shah</span>
+            Made by <span className="text-[#5865F2] font-semibold">Sameer Shah</span> | CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span>
           </p>
         </div>
       </div>

@@ -6,7 +6,15 @@ export const runtime = 'edge';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { getDashboardStats, getAtRiskMembers, connectDiscord, sendRecoveryEmails, createCashfreeCheckout, getMemberActivity, getServerMetrics, exportData } from './actions';
+import { 
+  connectDiscord, 
+  getDashboardStats, 
+  getAtRiskMembers, 
+  sendRecoveryEmails, 
+  getMemberActivity, 
+  getServerMetrics,
+  createCashfreeCheckout
+} from './actions';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
@@ -75,6 +83,14 @@ export default function DashboardPage() {
   const [sortBy, setSortBy] = useState<'risk' | 'activity' | 'name'>('risk');
   const [showExportModal, setShowExportModal] = useState(false);
   const [realTimeMode, setRealTimeMode] = useState(true);
+  const [emailStats, setEmailStats] = useState<{
+    totalEmailsSent: number;
+    uniqueRecipients: number;
+    summary: {
+      last7Days: number;
+      last30Days: number;
+    };
+  } | null>(null);
 
   const searchParams = useSearchParams();
 
@@ -89,6 +105,18 @@ export default function DashboardPage() {
       // Clean URL without page reload
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('success');
+
+    // Fetch email tracking stats
+    if (userId) {
+      fetch(`/api/email-tracking?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setEmailStats(data);
+          }
+        })
+        .catch(err => console.error('Failed to fetch email stats:', err));
+    }
       window.history.replaceState({}, '', newUrl.toString());
     } else if (error) {
       setConnectError(`Connection failed: ${error}`);
@@ -298,8 +326,10 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Plan</span>
-                  <span className="font-semibold">{stats.isPro ? 'CommunityGuard Pro' : 'Free Tier'}</span>
+                  <span className="text-slate-400">Current Plan</span>
+                  <span className="font-semibold">
+                    {stats.isPro ? 'Professional' : 'Free'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">Days Remaining</span>
@@ -312,8 +342,16 @@ export default function DashboardPage() {
               </div>
               {!stats.isPro && (
                 <Link href="/pricing" className="mt-4 block w-full py-3 bg-gradient-to-r from-[#5865F2] to-[#4752c4] text-white text-center font-semibold rounded-xl hover:shadow-[0_4px_20px_rgba(88,101,242,0.4)] transition-all">
-                  Upgrade to Pro
+                  View All Plans
                 </Link>
+              )}
+              {stats.isPro && (
+                <button 
+                  onClick={handleUpgradeToPro}
+                  className="mt-4 block w-full py-3 bg-white/10 hover:bg-white/20 text-white text-center font-semibold rounded-xl transition-all"
+                >
+                  Manage Subscription
+                </button>
               )}
             </div>
 
@@ -329,6 +367,33 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Email Tracking Stats */}
+            {emailStats && (
+              <div className="bg-[#111318] border border-white/10 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold mb-4">Email Analytics</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-3 bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-white">{emailStats.totalEmailsSent}</p>
+                    <p className="text-sm text-slate-400">Total Emails Sent</p>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-[#5865F2]">{emailStats.uniqueRecipients}</p>
+                    <p className="text-sm text-slate-400">Unique Recipients</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Last 7 Days</span>
+                    <span className="font-semibold text-emerald-400">{emailStats.summary.last7Days}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Last 30 Days</span>
+                    <span className="font-semibold text-blue-400">{emailStats.summary.last30Days}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (

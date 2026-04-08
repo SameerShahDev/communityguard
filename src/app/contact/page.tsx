@@ -19,7 +19,7 @@ export default function ContactPage() {
           </Link>
           <h1 className="text-4xl font-extrabold text-white mt-6 mb-4">Contact Us</h1>
           <p className="text-slate-400">We&apos;d love to hear from you!</p>
-          <p className="text-slate-500 text-sm mt-2">Operated by <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
+          <p className="text-slate-500 text-sm mt-2">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
         </div>
 
         <div className="bg-[#111318] border border-white/5 rounded-3xl p-8 shadow-2xl">
@@ -55,7 +55,7 @@ export default function ContactPage() {
         </div>
 
         <div className="text-center mt-8">
-          <p className="text-slate-600 text-sm">Operated by <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
+          <p className="text-slate-600 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
         </div>
       </div>
     </div>

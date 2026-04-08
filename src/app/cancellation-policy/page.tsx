@@ -24,7 +24,7 @@ export default function CancellationPolicyPage() {
             Cancellation Policy
           </h1>
           <p className="text-slate-400">Last updated: April 8, 2026</p>
-          <p className="text-slate-500 text-sm mt-2">Legal Entity: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
+          <p className="text-slate-500 text-sm mt-2">Legal Entity: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN (CEO)</span></p>
         </div>
 
         <div className="bg-[#111318] border border-white/5 rounded-3xl p-8 md:p-12 shadow-2xl">
@@ -32,7 +32,7 @@ export default function CancellationPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">1. Cancellation Rights</h2>
               <p className="text-slate-400 leading-relaxed">
-                As a subscriber of CommunityGuard (operated by SAHANA PRAVEEN), you have the right to cancel your 
+                As a subscriber of CommunityGuard (CEO: SAHANA PRAVEEN), you have the right to cancel your 
                 subscription at any time. This policy explains how cancellations work and what to expect.
               </p>
             </section>
@@ -84,7 +84,7 @@ export default function CancellationPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">7. Contact Information</h2>
               <div className="bg-[#0c0e12] rounded-xl p-6 border border-white/5">
-                <p className="text-slate-400"><strong className="text-white">Business Name:</strong> SAHANA PRAVEEN</p>
+                <p className="text-slate-400"><strong className="text-white">Business Name:</strong> SAHANA PRAVEEN (CEO)</p>
                 <p className="text-slate-400 mt-2"><strong className="text-white">Email:</strong> <a href="mailto:sahanapraveen2006@gmail.com" className="text-[#5865F2] hover:underline">sahanapraveen2006@gmail.com</a></p>
                 <p className="text-slate-400 mt-2"><strong className="text-white">Phone:</strong> <a href="tel:+917321086174" className="text-[#5865F2] hover:underline">+91 73210 86174</a></p>
               </div>
@@ -94,7 +94,7 @@ export default function CancellationPolicyPage() {
 
         <div className="text-center mt-8">
           <p className="text-slate-600 text-sm">
-            Operated by <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span>
+            Made by <span className="text-[#5865F2] font-semibold">Sameer Shah</span> | CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span>
           </p>
         </div>
       </div>

@@ -184,7 +184,7 @@ export default function LandingPage() {
                        <span className="text-lg font-bold text-white">CommunityGuard</span>
                     </div>
                     <p className="text-slate-500 text-sm mb-4">AI-powered Discord community management platform.</p>
-                    <p className="text-slate-400 text-sm">Founded by <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
+                    <p className="text-slate-400 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
                  </div>
 
                  {/* Quick Links */}
@@ -225,7 +225,7 @@ export default function LandingPage() {
               {/* Bottom Bar */}
               <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                  <p className="text-slate-500 text-sm">&copy; 2025 CommunityGuard.ai All rights reserved.</p>
-                 <p className="text-slate-500 text-sm">Founded by <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
+                 <p className="text-slate-500 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
               </div>
            </div>
         </footer>

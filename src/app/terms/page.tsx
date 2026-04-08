@@ -27,7 +27,7 @@ export default function TermsPage() {
             Terms & Conditions
           </h1>
           <p className="text-slate-400">Last updated: April 8, 2026</p>
-          <p className="text-slate-500 text-sm mt-2">Legal Entity: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
+          <p className="text-slate-500 text-sm mt-2">Legal Entity: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN (CEO)</span></p>
         </div>
 
         {/* Content Card */}
@@ -206,7 +206,7 @@ export default function TermsPage() {
         {/* Bottom Made By */}
         <div className="text-center mt-8">
           <p className="text-slate-600 text-sm">
-            Made with ❤️ by <span className="text-[#5865F2] font-semibold">Sameer Shah</span>
+            Made by <span className="text-[#5865F2] font-semibold">Sameer Shah</span> | CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span>
           </p>
         </div>
       </div>
