@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createEdgeClient, createServiceClient } from '@/lib/supabase/edge';
 
-export const runtime = 'edge';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
 

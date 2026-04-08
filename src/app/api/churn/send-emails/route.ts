@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createEdgeClient } from '@/lib/supabase/edge';
 
-export const runtime = 'edge';
 
 // Send email using Resend API directly (no SDK)
 async function sendEmail(to: string, subject: string, html: string) {

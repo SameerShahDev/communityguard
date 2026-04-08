@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/edge';
 
-export const runtime = 'edge';
 
 // Discord Bot Token verification
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
