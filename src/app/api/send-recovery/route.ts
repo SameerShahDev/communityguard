@@ -1,9 +1,11 @@
-import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY!);
+// Initialize Brevo (Sendinblue) API client
+const brevoClient = new TransactionalEmailsApi();
+const apiKey = brevoClient.authentications['apiKey'];
+apiKey.apiKey = process.env.BREVO_API_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
     let failed = 0;
     const errors: string[] = [];
 
-    // 3. SEND REAL EMAILS via Resend API
+    // 3. SEND REAL EMAILS via Brevo API
     for (const member of highRiskMembers) {
       // Skip members without email
       if (!member.member_email) {
@@ -64,12 +66,13 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Send email via Resend
-        const { data, error: emailError } = await resend.emails.send({
-          from: 'CommunityGuard <noreply@communityguard.ai>',
-          to: [member.member_email],
-          subject: `We miss you in ${member.community_name}! 💙`,
-          html: `
+        // Create Brevo email
+        const sendSmtpEmail = new SendSmtpEmail();
+        
+        sendSmtpEmail.to = [{ email: member.member_email }];
+        sendSmtpEmail.sender = { email: 'noreply@communityguard.ai', name: 'CommunityGuard' };
+        sendSmtpEmail.subject = `We miss you in ${member.community_name}! 💙`;
+        sendSmtpEmail.htmlContent = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -131,14 +134,10 @@ export async function POST(request: NextRequest) {
             </body>
             </html>
           `
-        });
+        };
 
-        if (emailError) {
-          console.error(`Resend error for ${member.member_email}:`, emailError);
-          failed++;
-          errors.push(`${member.member_email}: ${emailError.message}`);
-          continue;
-        }
+        // Send email via Brevo API
+        const data = await brevoClient.sendTransacEmail(sendSmtpEmail);
 
         // Email sent successfully
         sent++;
@@ -149,7 +148,7 @@ export async function POST(request: NextRequest) {
           .update({ 
             recovery_attempted: true, 
             last_email_sent: new Date().toISOString(),
-            email_id: data?.id  // Store Resend email ID for tracking
+            message_id: data.messageId  // Store Brevo message ID for tracking
           })
           .eq('discord_id', member.discord_id)
           .eq('community_id', member.community_id);
@@ -158,7 +157,7 @@ export async function POST(request: NextRequest) {
           console.error(`Failed to update record for ${member.discord_id}:`, updateError);
         }
 
-        // Add small delay to respect rate limits (100 emails/second on Resend)
+        // Add small delay to respect rate limits (Brevo: 300 emails/second)
         if (sent % 10 === 0) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
