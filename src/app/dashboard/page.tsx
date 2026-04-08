@@ -167,7 +167,7 @@ export default function DashboardPage() {
     setIsUpgrading(true);
     setConnectError(null);
     try {
-      const result = await createStripeCheckout();
+      const result = await createStripeCheckout(userId);
       if (result.url) {
         window.location.href = result.url;
       } else {
