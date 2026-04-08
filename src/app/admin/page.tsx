@@ -1,6 +1,7 @@
 "use client";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -150,7 +151,7 @@ export default function AdminPanel() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Admin Panel</h1>
-            <p className="text-slate-400">Manage your CommunityGuard instance</p>
+            <p className="text-slate-400">Manage your Igone instance</p>
           </div>
           <Link href="/dashboard" className="text-blue-400 hover:text-blue-300">
             Back to Dashboard →

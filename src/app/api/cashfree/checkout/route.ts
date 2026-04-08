@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { cashfreeConfig } from '@/lib/cashfree';
 
@@ -8,12 +10,12 @@ export async function POST(request: NextRequest) {
 
     // New pricing plans
     const plans: Record<string, { name: string; amount: number }> = {
-      starter_monthly: { name: 'CommunityGuard Starter - Monthly', amount: 29900 },
-      starter_yearly: { name: 'CommunityGuard Starter - Yearly', amount: 299000 },
-      pro_monthly: { name: 'CommunityGuard Professional - Monthly', amount: 49900 },
-      pro_yearly: { name: 'CommunityGuard Professional - Yearly', amount: 499000 },
-      enterprise_monthly: { name: 'CommunityGuard Enterprise - Monthly', amount: 99900 },
-      enterprise_yearly: { name: 'CommunityGuard Enterprise - Yearly', amount: 999000 }
+      starter_monthly: { name: 'Igone Starter - Monthly', amount: 29900 },
+      starter_yearly: { name: 'Igone Starter - Yearly', amount: 299000 },
+      pro_monthly: { name: 'Igone Professional - Monthly', amount: 49900 },
+      pro_yearly: { name: 'Igone Professional - Yearly', amount: 499000 },
+      enterprise_monthly: { name: 'Igone Enterprise - Monthly', amount: 99900 },
+      enterprise_yearly: { name: 'Igone Enterprise - Yearly', amount: 999000 }
     };
 
     const actualPlanId = `${planId}_${billingCycle}`;

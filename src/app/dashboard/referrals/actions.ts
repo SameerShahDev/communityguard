@@ -280,7 +280,7 @@ export async function getReferralLink(): Promise<{ link: string | null; error: s
       return { link: null, error: error || "No referral code" };
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.pages.dev';
     const link = `${siteUrl}/?ref=${code}`;
 
     return { link, error: null };

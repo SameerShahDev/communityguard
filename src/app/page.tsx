@@ -27,7 +27,7 @@ export default function LandingPage() {
              <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)] transition-transform hover:scale-105">
                 <span className="text-white font-bold text-xl">C</span>
              </div>
-             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">CommunityGuard</span>
+             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Cigone</span>
           </div>
           
           <div className="hidden md:flex items-center gap-10">
@@ -114,7 +114,7 @@ export default function LandingPage() {
               <div className="p-8 rounded-3xl bg-[#111318] border border-white/5 hover:border-[#5865F2]/50 transition-colors group">
                  <div className="w-12 h-12 rounded-xl bg-[#5865F2]/20 text-[#5865F2] flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🛡️</div>
                  <h3 className="text-xl font-bold mb-3 text-white">Revenue Protection</h3>
-                 <p className="text-slate-400 leading-relaxed">Every member saved is revenue retained. CommunityGuard pays for itself by reducing community churn by up to 40%.</p>
+                 <p className="text-slate-400 leading-relaxed">Every member saved is revenue retained. Cigone pays for itself by reducing community churn by up to 40%.</p>
               </div>
            </div>
         </section>
@@ -181,7 +181,7 @@ export default function LandingPage() {
                        <div className="w-10 h-10 rounded-lg bg-[#5865F2] flex items-center justify-center">
                           <span className="text-white font-bold text-lg">C</span>
                        </div>
-                       <span className="text-lg font-bold text-white">CommunityGuard</span>
+                       <span className="text-lg font-bold text-white">Cigone</span>
                     </div>
                     <p className="text-slate-500 text-sm mb-4">AI-powered Discord community management platform.</p>
                     <p className="text-slate-400 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
@@ -224,7 +224,7 @@ export default function LandingPage() {
 
               {/* Bottom Bar */}
               <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                 <p className="text-slate-500 text-sm">&copy; 2025 CommunityGuard.ai All rights reserved.</p>
+                 <p className="text-slate-500 text-sm">&copy; 2025 Cigone.ai All rights reserved.</p>
                  <p className="text-slate-500 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
               </div>
            </div>

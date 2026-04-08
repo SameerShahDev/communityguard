@@ -374,7 +374,7 @@ export async function getAtRiskMembers() {
 
 export async function connectDiscord(userId: string) {
   try {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.pages.dev';
     const clientId = process.env.DISCORD_CLIENT_ID || '1489654332361019422';
     
     // Include user_id in state parameter for reliable auth

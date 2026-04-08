@@ -173,8 +173,8 @@ export default function TermsPage() {
                 </h2>
                 <p className="text-slate-400 leading-relaxed">
                   If you have any questions about these Terms, please contact us at{' '}
-                  <a href="mailto:support@communityguard.ai" className="text-[#a2a9fa] hover:text-white transition-colors">
-                    support@communityguard.ai
+                  <a href="mailto:support@igone.ai" className="text-[#a2a9fa] hover:text-white transition-colors">
+                    support@igone.ai
                   </a>
                 </p>
               </section>

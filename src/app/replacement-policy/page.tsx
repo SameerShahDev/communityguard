@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Replacement Policy - CommunityGuard',
-  description: 'Replacement Policy for CommunityGuard AI-powered Discord community management platform.',
+  title: 'Replacement Policy - Cigone',
+  description: 'Replacement Policy for Cigone AI-powered Discord community management platform.',
 };
 
 export default function ReplacementPolicyPage() {
@@ -18,7 +18,7 @@ export default function ReplacementPolicyPage() {
             <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
               <span className="text-white font-bold text-2xl">C</span>
             </div>
-            <span className="text-white font-bold text-xl">CommunityGuard</span>
+            <span className="text-white font-bold text-xl">Cigone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Replacement Policy
@@ -32,7 +32,7 @@ export default function ReplacementPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">1. Service-Level Replacement</h2>
               <p className="text-slate-400 leading-relaxed">
-                As a digital service provider, CommunityGuard (CEO: SAHANA PRAVEEN) does not deal in physical 
+                As a digital service provider, Cigone (CEO: SAHANA PRAVEEN) does not deal in physical 
                 goods. However, we offer service-level replacements in the form of account credits, service extensions, 
                 or plan upgrades/downgrades as outlined in this policy.
               </p>

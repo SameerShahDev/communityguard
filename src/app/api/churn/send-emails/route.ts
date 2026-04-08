@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { createEdgeClient } from '@/lib/supabase/edge';
 
@@ -11,7 +13,7 @@ async function sendEmail(to: string, subject: string, html: string) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: 'CommunityGuard <recovery@communityguard.ai>',
+      from: 'CommunityGuard <recovery@igone.ai>',
       to: [to],
       subject,
       html

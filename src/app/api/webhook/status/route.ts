@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     
     // Get webhook configuration
     const config = {
-      endpoint: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev'}/api/discord-webhook`,
+      endpoint: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.pages.dev'}/api/discord-webhook`,
       public_key: process.env.DISCORD_PUBLIC_KEY ? '✅ Configured' : '❌ Missing',
       bot_token: process.env.DISCORD_BOT_TOKEN ? '✅ Configured' : '❌ Missing',
       supported_events: [

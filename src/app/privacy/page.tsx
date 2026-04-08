@@ -129,8 +129,8 @@ export default function PrivacyPage() {
                   We retain your information for as long as your account is active or as needed 
                   to provide you services. If you wish to delete your account or request that 
                   we no longer use your information, please contact us at{' '}
-                  <a href="mailto:support@communityguard.ai" className="text-[#a2a9fa] hover:text-white transition-colors">
-                    support@communityguard.ai
+                  <a href="mailto:support@igone.ai" className="text-[#a2a9fa] hover:text-white transition-colors">
+                    support@igone.ai
                   </a>.
                   We will retain and use your information as necessary to comply with legal obligations,
                   resolve disputes, and enforce our agreements.
@@ -202,8 +202,8 @@ export default function PrivacyPage() {
                   If you have any questions about this Privacy Policy, please contact us:
                 </p>
                 <ul className="list-disc list-inside text-slate-400 space-y-2 ml-4 mt-3">
-                  <li>Email: <a href="mailto:support@communityguard.ai" className="text-[#a2a9fa] hover:text-white transition-colors">support@communityguard.ai</a></li>
-                  <li>Discord: Join our support server at <a href="#" className="text-[#a2a9fa] hover:text-white transition-colors">discord.gg/communityguard</a></li>
+                  <li>Email: <a href="mailto:support@igone.ai" className="text-[#a2a9fa] hover:text-white transition-colors">support@igone.ai</a></li>
+                  <li>Discord: Join our support server at <a href="#" className="text-[#a2a9fa] hover:text-white transition-colors">discord.gg/igone</a></li>
                 </ul>
               </section>
             </div>

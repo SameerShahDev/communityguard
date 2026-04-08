@@ -1,13 +1,15 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.vercel.app';
 
 // ASCII Art for Sameer Shah branding
 const CONSOLE_BRANDING = `
 ╔══════════════════════════════════════════════════════════╗
-║     🔐 CommunityGuard Auth System by Sameer Shah 🔐     ║
+║     🔐 IGone Auth System by Sameer Shah 🔐     ║
 ║              @sameershahdev                              ║
 ╚══════════════════════════════════════════════════════════╝
 `;

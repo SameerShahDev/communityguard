@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
       try {
         const emailPayload = {
           sender: {
-            email: 'noreply@communityguard.ai',
+            email: 'noreply@igone.ai',
             name: 'CommunityGuard'
           },
           to: [{ email: member.member_email }],
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
       <p style="color: #666; font-size: 14px; line-height: 1.5;">If you're no longer interested in being part of ${member.community_name}, you can ignore this email. Otherwise, we'd love to have you back!</p>
     </div>
     <div style="background: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
-      <p style="color: #999; font-size: 12px; margin: 0;">Sent by CommunityGuard - AI-powered community management<br><a href="https://communityguard.ai" style="color: #5865F2; text-decoration: none;">communityguard.ai</a></p>
+      <p style="color: #999; font-size: 12px; margin: 0;">Sent by CommunityGuard - AI-powered community management<br><a href="https://igone.ai" style="color: #5865F2; text-decoration: none;">igone.ai</a></p>
     </div>
   </div>
 </body>

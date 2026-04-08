@@ -59,7 +59,7 @@ export default function OnboardingPage() {
             <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)]">
               <span className="text-white font-bold text-xl">C</span>
             </div>
-            <span className="text-xl font-bold tracking-tight">CommunityGuard</span>
+            <span className="text-xl font-bold tracking-tight">Cigone</span>
           </Link>
         </div>
 
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
           )}
 
           <p className="text-slate-400 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-            Invite the CommunityGuard bot to your server. It will silently track member activity and alert you before people leave.
+            Invite the Cigone bot to your server. It will silently track member activity and alert you before people leave.
           </p>
 
           {/* How it works */}

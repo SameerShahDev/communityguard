@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { createEdgeClient } from '@/lib/supabase/edge';
 
@@ -122,7 +124,7 @@ async function sendRecoveryEmail(params: RecoveryEmailParams, apiKey: string) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'CommunityGuard <noreply@communityguard.ai>',
+      from: 'CommunityGuard <noreply@igone.ai>',
       to,
       subject,
       html: `

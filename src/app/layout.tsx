@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CommunityGuard - AI-Powered Community Management",
+  title: "Igone - AI-Powered Community Management",
   description: "AI-powered Discord community management and churn prevention",
   icons: {
     icon: '/icon.jpeg',

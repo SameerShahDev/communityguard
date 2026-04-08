@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PaymentButton } from '@/app/components/PaymentButton';
@@ -92,7 +94,7 @@ export default function ProfilePage() {
                 <div className={`w-3 h-3 rounded-full ${user?.pro_days_left > 0 ? 'bg-emerald-400' : 'bg-amber-400'}`}></div>
                 <div>
                   <p className="text-white font-semibold">
-                    {user?.pro_days_left > 0 ? 'CommunityGuard Pro' : 'Free Plan'}
+                    {user?.pro_days_left > 0 ? 'Igone Pro' : 'Free Plan'}
                   </p>
                   <p className="text-sm text-slate-400">
                     {user?.pro_days_left > 0 ? `${user.pro_days_left} days remaining` : 'Basic features only'}

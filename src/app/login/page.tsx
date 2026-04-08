@@ -64,7 +64,7 @@ function LoginContent() {
     
     try {
       // Use fixed SITE_URL to ensure consistent redirects
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.pages.dev';
       
       console.log('🚀 [SameerShahDev] Using Supabase built-in Discord OAuth');
       

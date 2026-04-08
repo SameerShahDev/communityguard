@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { Mail, Phone } from 'lucide-react';
 
 export const metadata = {
-  title: 'Contact Us - CommunityGuard',
-  description: 'Contact CommunityGuard - SAHANA PRAVEEN. Get in touch for support.',
+  title: 'Contact Us - Igone',
+  description: 'Contact Igone - SAHANA PRAVEEN. Get in touch for support.',
 };
 
 export default function ContactPage() {
@@ -15,7 +15,7 @@ export default function ContactPage() {
             <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
               <span className="text-white font-bold text-2xl">C</span>
             </div>
-            <span className="text-white font-bold text-xl">CommunityGuard</span>
+            <span className="text-white font-bold text-xl">Igone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white mt-6 mb-4">Contact Us</h1>
           <p className="text-slate-400">We&apos;d love to hear from you!</p>

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Return Policy - CommunityGuard',
-  description: 'Return Policy for CommunityGuard AI-powered Discord community management platform.',
+  title: 'Return Policy - Cigone',
+  description: 'Return Policy for Cigone AI-powered Discord community management platform.',
 };
 
 export default function ReturnPolicyPage() {
@@ -18,7 +18,7 @@ export default function ReturnPolicyPage() {
             <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
               <span className="text-white font-bold text-2xl">C</span>
             </div>
-            <span className="text-white font-bold text-xl">CommunityGuard</span>
+            <span className="text-white font-bold text-xl">Cigone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Return Policy
@@ -32,7 +32,7 @@ export default function ReturnPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">1. Digital Service Nature</h2>
               <p className="text-slate-400 leading-relaxed">
-                CommunityGuard (CEO: SAHANA PRAVEEN) is a digital SaaS (Software as a Service) product. 
+                Cigone (CEO: SAHANA PRAVEEN) is a digital SaaS (Software as a Service) product. 
                 As our service is delivered entirely online, traditional &quot;returns&quot; of physical goods do not apply. 
                 Instead, we offer satisfaction guarantees and refund options as outlined below.
               </p>

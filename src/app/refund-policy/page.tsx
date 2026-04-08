@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Refund Policy - CommunityGuard',
-  description: 'Refund Policy for CommunityGuard AI-powered Discord community management platform.',
+  title: 'Refund Policy - Cigone',
+  description: 'Refund Policy for Cigone AI-powered Discord community management platform.',
 };
 
 export default function RefundPolicyPage() {
@@ -18,7 +18,7 @@ export default function RefundPolicyPage() {
             <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
               <span className="text-white font-bold text-2xl">C</span>
             </div>
-            <span className="text-white font-bold text-xl">CommunityGuard</span>
+            <span className="text-white font-bold text-xl">Cigone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Refund Policy
@@ -32,7 +32,7 @@ export default function RefundPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">1. Overview</h2>
               <p className="text-slate-400 leading-relaxed">
-                At CommunityGuard (CEO: SAHANA PRAVEEN), we strive to ensure your satisfaction with our services. 
+                At Cigone (CEO: SAHANA PRAVEEN), we strive to ensure your satisfaction with our services. 
                 This Refund Policy outlines the conditions under which refunds may be granted for our subscription plans.
               </p>
             </section>

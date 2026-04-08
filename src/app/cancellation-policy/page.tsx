@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Cancellation Policy - CommunityGuard',
-  description: 'Cancellation Policy for CommunityGuard AI-powered Discord community management platform.',
+  title: 'Cancellation Policy - Cigone',
+  description: 'Cancellation Policy for Cigone AI-powered Discord community management platform.',
 };
 
 export default function CancellationPolicyPage() {
@@ -18,7 +18,7 @@ export default function CancellationPolicyPage() {
             <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
               <span className="text-white font-bold text-2xl">C</span>
             </div>
-            <span className="text-white font-bold text-xl">CommunityGuard</span>
+            <span className="text-white font-bold text-xl">Cigone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Cancellation Policy
@@ -32,7 +32,7 @@ export default function CancellationPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-white mb-4">1. Cancellation Rights</h2>
               <p className="text-slate-400 leading-relaxed">
-                As a subscriber of CommunityGuard (CEO: SAHANA PRAVEEN), you have the right to cancel your 
+                As a subscriber of Cigone (CEO: SAHANA PRAVEEN), you have the right to cancel your 
                 subscription at any time. This policy explains how cancellations work and what to expect.
               </p>
             </section>

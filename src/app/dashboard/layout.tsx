@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-white">CommunityGuard</h1>
+              <h1 className="text-lg font-bold tracking-tight text-white">Igone</h1>
               <p className="text-[10px] text-slate-400">Discord Analytics</p>
             </div>
           </Link>

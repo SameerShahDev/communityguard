@@ -307,7 +307,7 @@ export default function PricingPage() {
         <div className="mt-20 text-center bg-gradient-to-r from-[#5865F2]/10 to-[#4752C4]/10 rounded-3xl p-12 border border-[#5865F2]/20">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to grow your community?</h2>
           <p className="text-slate-400 mb-8 max-w-2xl mx-auto">
-            Join thousands of Discord server owners who trust CommunityGuard to protect and grow their communities.
+            Join thousands of Discord server owners who trust Igone to protect and grow their communities.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

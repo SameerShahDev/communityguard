@@ -1,8 +1,10 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { createEdgeClient, createServiceClient } from '@/lib/supabase/edge';
 
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://communityguard.pages.dev';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.vercel.app';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
