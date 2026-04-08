@@ -26,7 +26,8 @@ export default function TermsPage() {
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Terms & Conditions
           </h1>
-          <p className="text-slate-400">Last updated: April 6, 2026</p>
+          <p className="text-slate-400">Last updated: April 8, 2026</p>
+          <p className="text-slate-500 text-sm mt-2">Legal Entity: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
         </div>
 
         {/* Content Card */}

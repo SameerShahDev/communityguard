@@ -171,19 +171,61 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="py-20 border-t border-white/5 bg-[#0c0e12]">
-           <div className="max-w-7xl mx-auto px-4 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-lg bg-[#5865F2] flex items-center justify-center">
-                    <span className="text-white font-bold">C</span>
+        <footer className="py-16 border-t border-white/5 bg-[#0c0e12]">
+           <div className="max-w-7xl mx-auto px-4">
+              {/* Main Footer Content */}
+              <div className="grid md:grid-cols-4 gap-8 mb-12">
+                 {/* Brand */}
+                 <div className="md:col-span-1">
+                    <div className="flex items-center gap-3 mb-4">
+                       <div className="w-10 h-10 rounded-lg bg-[#5865F2] flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">C</span>
+                       </div>
+                       <span className="text-lg font-bold text-white">CommunityGuard</span>
+                    </div>
+                    <p className="text-slate-500 text-sm mb-4">AI-powered Discord community management platform.</p>
+                    <p className="text-slate-400 text-sm">Operated by <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
                  </div>
-                 <span className="text-lg font-bold">CommunityGuard</span>
+
+                 {/* Quick Links */}
+                 <div>
+                    <h4 className="text-white font-semibold mb-4">Legal</h4>
+                    <ul className="space-y-2 text-sm">
+                       <li><Link href="/terms" className="text-slate-400 hover:text-white transition-colors">Terms & Conditions</Link></li>
+                       <li><Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">Privacy Policy</Link></li>
+                       <li><Link href="/refund-policy" className="text-slate-400 hover:text-white transition-colors">Refund Policy</Link></li>
+                       <li><Link href="/cancellation-policy" className="text-slate-400 hover:text-white transition-colors">Cancellation Policy</Link></li>
+                       <li><Link href="/return-policy" className="text-slate-400 hover:text-white transition-colors">Return Policy</Link></li>
+                       <li><Link href="/replacement-policy" className="text-slate-400 hover:text-white transition-colors">Replacement Policy</Link></li>
+                    </ul>
+                 </div>
+
+                 {/* Contact */}
+                 <div>
+                    <h4 className="text-white font-semibold mb-4">Contact</h4>
+                    <ul className="space-y-2 text-sm text-slate-400">
+                       <li><a href="mailto:sahanapraveen2006@gmail.com" className="hover:text-[#5865F2] transition-colors">sahanapraveen2006@gmail.com</a></li>
+                       <li><a href="tel:+917321086174" className="hover:text-[#5865F2] transition-colors">+91 73210 86174</a></li>
+                       <li><Link href="/contact" className="hover:text-[#5865F2] transition-colors">Contact Us</Link></li>
+                    </ul>
+                 </div>
+
+                 {/* Social */}
+                 <div>
+                    <h4 className="text-white font-semibold mb-4">Follow Us</h4>
+                    <div className="flex gap-4">
+                       <a href="https://www.instagram.com/sameershahdev/" target="_blank" rel="noopener" className="text-slate-400 hover:text-pink-500 transition-colors">Instagram</a>
+                       <a href="https://www.linkedin.com/in/sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-500 transition-colors">LinkedIn</a>
+                       <a href="https://www.facebook.com/Sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-600 transition-colors">Facebook</a>
+                       <a href="https://youtube.com/@sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-red-500 transition-colors">YouTube</a>
+                    </div>
+                 </div>
               </div>
-              <p className="text-slate-500 text-sm">&copy; 2025 CommunityGuard.ai All rights reserved.</p>
-              <div className="flex gap-8 text-sm font-semibold text-slate-400">
-                 <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                 <Link href="#" className="hover:text-white transition-colors">Terms</Link>
-                 <Link href="#" className="hover:text-white transition-colors">Discord</Link>
+
+              {/* Bottom Bar */}
+              <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                 <p className="text-slate-500 text-sm">&copy; 2025 CommunityGuard.ai All rights reserved.</p>
+                 <p className="text-slate-500 text-sm">Made with ❤️ by <span className="text-[#5865F2]">SAHANA PRAVEEN</span></p>
               </div>
            </div>
         </footer>
