@@ -16,9 +16,24 @@ export const metadata: Metadata = {
   title: "Igone - AI-Powered Community Management",
   description: "AI-powered Discord community management and churn prevention",
   icons: {
-    icon: '/icon.jpeg',
+    icon: [
+      { url: '/icon.jpeg', sizes: '32x32', type: 'image/jpeg' },
+      { url: '/icon.jpeg', sizes: '16x16', type: 'image/jpeg' },
+      { url: '/icon.jpeg', sizes: '192x192', type: 'image/jpeg' },
+      { url: '/icon.jpeg', sizes: '512x512', type: 'image/jpeg' },
+    ],
     shortcut: '/icon.jpeg',
-    apple: '/icon.jpeg',
+    apple: [
+      { url: '/icon.jpeg', sizes: '180x180', type: 'image/jpeg' },
+      { url: '/icon.jpeg', sizes: '152x152', type: 'image/jpeg' },
+      { url: '/icon.jpeg', sizes: '120x120', type: 'image/jpeg' },
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/icon.jpeg',
+      },
+    ],
   },
 };
 
