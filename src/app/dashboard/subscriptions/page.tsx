@@ -24,14 +24,18 @@ export default function SubscriptionsPage() {
     const supabase = createClient();
     const { data: { user: authUser } } = await supabase.auth.getUser();
     
-    if (authUser) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
-      setUser(userData);
+    if (!authUser) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login';
+      return;
     }
+    
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .single();
+    setUser(userData);
     setLoading(false);
   }
 

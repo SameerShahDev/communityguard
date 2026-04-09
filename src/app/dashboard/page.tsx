@@ -94,6 +94,7 @@ export default function DashboardPage() {
 
   const searchParams = useSearchParams();
 
+  // Handle URL params once on mount
   useEffect(() => {
     // Check for URL params from Discord callback and payment
     const success = searchParams.get('success');
@@ -105,18 +106,6 @@ export default function DashboardPage() {
       // Clean URL without page reload
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('success');
-
-    // Fetch email tracking stats
-    if (userId) {
-      fetch(`/api/email-tracking?userId=${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setEmailStats(data);
-          }
-        })
-        .catch(err => console.error('Failed to fetch email stats:', err));
-    }
       window.history.replaceState({}, '', newUrl.toString());
     } else if (error) {
       setConnectError(`Connection failed: ${error}`);
@@ -143,9 +132,23 @@ export default function DashboardPage() {
       newUrl.searchParams.delete('payment');
       window.history.replaceState({}, '', newUrl.toString());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
 
-    // Data loaded in useEffect above
-  }, [searchParams]);
+  // Fetch email stats only when userId changes
+  useEffect(() => {
+    if (!userId) return;
+    
+    // Fetch email tracking stats once
+    fetch(`/api/email-tracking?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setEmailStats(data);
+        }
+      })
+      .catch(err => console.error('Failed to fetch email stats:', err));
+  }, [userId]);
 
   // Refresh data function
   const refreshData = async () => {

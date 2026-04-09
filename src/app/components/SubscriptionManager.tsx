@@ -42,21 +42,39 @@ export function SubscriptionManager({ userId }: SubscriptionManagerProps) {
   const [events, setEvents] = useState<any[]>([]);
 
   useEffect(() => {
-    loadData();
+    if (userId) {
+      loadData();
+    } else {
+      setLoading(false);
+      setError("User not authenticated");
+    }
   }, [userId]);
 
   async function loadData() {
+    if (!userId) {
+      setLoading(false);
+      setError("User not authenticated");
+      return;
+    }
+    
     setLoading(true);
-    const [subResult, summaryResult] = await Promise.all([
-      searchUserSubscriptions(userId, { status: statusFilter as any }),
-      getSubscriptionDashboard(userId)
-    ]);
+    setError(null);
     
-    if (subResult.error) setError(subResult.error);
-    else setSubscriptions(subResult.subscriptions);
-    
-    if (summaryResult.summary) setSummary(summaryResult.summary);
-    setLoading(false);
+    try {
+      const [subResult, summaryResult] = await Promise.all([
+        searchUserSubscriptions(userId, { status: statusFilter as any }),
+        getSubscriptionDashboard(userId)
+      ]);
+      
+      if (subResult.error) setError(subResult.error);
+      else setSubscriptions(subResult.subscriptions);
+      
+      if (summaryResult.summary) setSummary(summaryResult.summary);
+    } catch (err: any) {
+      setError(err.message || "Failed to load subscription data");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSearch() {
@@ -106,8 +124,35 @@ export function SubscriptionManager({ userId }: SubscriptionManagerProps) {
     setShowHistory(!showHistory);
   }
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
-  if (error) return <div className="text-red-500 py-4">Error: {error}</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+      <p className="text-slate-400">Loading subscription data...</p>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="bg-red-900/20 border border-red-800 rounded-xl p-6 text-center">
+      <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <p className="text-red-400 font-medium mb-2">{error}</p>
+      {error === "User not authenticated" ? (
+        <Link href="/login" className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition-colors">
+          Login
+        </Link>
+      ) : (
+        <button 
+          onClick={loadData}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-sm transition-colors"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6">

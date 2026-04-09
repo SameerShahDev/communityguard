@@ -210,6 +210,10 @@ export async function getWeeklyActivity(userId: string) {
   }
 }
 
+// Cache for dashboard stats to reduce edge requests
+let statsCache: { data: any; timestamp: number } | null = null;
+const CACHE_TTL = 5000; // 5 seconds
+
 export async function getDashboardStats(): Promise<{
   highRisk: number;
   silent: number;
@@ -232,6 +236,12 @@ export async function getDashboardStats(): Promise<{
   endsAt: string | null;
 }> {
   try {
+    // Check cache first
+    const now = Date.now();
+    if (statsCache && (now - statsCache.timestamp) < CACHE_TTL) {
+      return statsCache.data;
+    }
+    
     const supabase = await createClient();
 
     // Fetch current user
@@ -302,7 +312,7 @@ export async function getDashboardStats(): Promise<{
       }
     }
 
-    return {
+    const result = {
       highRisk: highRiskMembersCount,
       silent: silentMembersCount,
       active: activeMembersCount,
@@ -317,12 +327,16 @@ export async function getDashboardStats(): Promise<{
       weeklyActivity: [0,0,0,0,0],
       topPerformers: [],
       recentAlerts: [],
-      systemHealth: highRiskMembersCount > 10 ? 'warning' : 'good',
+      systemHealth: (highRiskMembersCount > 10 ? 'warning' : 'good') as 'excellent' | 'good' | 'warning' | 'critical',
       planName: subscriptionStatus.planName,
       billingCycle: subscriptionStatus.billingCycle,
       priceInr: subscriptionStatus.priceInr,
       endsAt: subscriptionStatus.endsAt
     };
+    
+    // Save to cache
+    statsCache = { data: result, timestamp: Date.now() };
+    return result;
   } catch (error: any) {
     console.error("Error in getDashboardStats:", error);
     return { 
