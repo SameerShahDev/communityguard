@@ -1,16 +1,63 @@
 "use client";
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { 
   SubscriptionManager,
   SubscriptionQuickCard 
 } from '@/app/components/SubscriptionManager';
-import { PaymentButton } from '@/app/components/PaymentButton';
 import Link from 'next/link';
+
+// Loading fallback component
+function SubscriptionLoading() {
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+        <p className="text-slate-400">Loading subscriptions...</p>
+      </div>
+    </div>
+  );
+}
+
+// Simple error boundary wrapper component
+class ErrorBoundaryWrapper extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Subscription component error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-red-900/20 border border-red-800 rounded-xl p-6 text-center">
+          <p className="text-red-400 mb-2">Failed to load subscription data</p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function SubscriptionsPage() {
   const [user, setUser] = useState<any>(null);
@@ -21,30 +68,37 @@ export default function SubscriptionsPage() {
   }, []);
 
   async function loadUser() {
-    const supabase = createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    
-    if (!authUser) {
-      // Redirect to login if not authenticated
-      window.location.href = '/login';
-      return;
+    try {
+      const supabase = createClient();
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authUser) {
+        window.location.href = '/login';
+        return;
+      }
+      
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+        
+      if (userError) {
+        console.error('Error loading user:', userError);
+        // Still set user with basic info from auth
+        setUser({ id: authUser.id, email: authUser.email });
+      } else {
+        setUser(userData);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    } finally {
+      setLoading(false);
     }
-    
-    const { data: userData } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', authUser.id)
-      .single();
-    setUser(userData);
-    setLoading(false);
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
-      </div>
-    );
+    return <SubscriptionLoading />;
   }
 
   return (
@@ -68,13 +122,17 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* Quick Status Card */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <SubscriptionQuickCard userId={user?.id} />
-      </div>
+      <Suspense fallback={<div className="h-24 bg-slate-800/50 rounded-xl animate-pulse" />}>
+        <div className="max-w-6xl mx-auto mb-8">
+          <SubscriptionQuickCard userId={user?.id} />
+        </div>
+      </Suspense>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto">
-        <SubscriptionManager userId={user?.id} />
+        <ErrorBoundaryWrapper>
+          <SubscriptionManager userId={user?.id} />
+        </ErrorBoundaryWrapper>
       </div>
 
       {/* Help Section */}
