@@ -593,7 +593,7 @@ export async function adminUpdateSubscription(
 
 // ==================== UTILITY FUNCTIONS ====================
 
-export function calculateProration(
+export async function calculateProration(
   currentPlanPrice: number,
   newPlanPrice: number,
   daysRemaining: number,
