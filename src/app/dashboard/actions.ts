@@ -275,53 +275,31 @@ export async function getDashboardStats(): Promise<{
     const hasServer = !!(communities && communities.length > 0);
     const community = communities?.[0];
     
-    // Get real member stats from member_activity
+    // Get real member stats from member_activity - SINGLE QUERY for speed
     let totalMembersCount = 0;
     let activeMembersCount = 0;
     let silentMembersCount = 0;
     let highRiskMembersCount = 0;
     
     if (community?.guild_id) {
-      // Total members
-      const { count: memberCount } = await supabase
-        .from("member_activity")
-        .select("*", { count: "exact", head: true })
-        .eq("guild_id", community.guild_id);
-      totalMembersCount = memberCount || 0;
+      // Use single RPC call for all stats (much faster!)
+      const { data: memberStats, error: statsError } = await supabase
+        .rpc('get_dashboard_member_stats', { p_guild_id: community.guild_id });
       
-      // Active members (messaged in last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { count: activeCount } = await supabase
-        .from("member_activity")
-      .select("*", { count: "exact", head: true })
-        .eq("guild_id", community.guild_id)
-        .gte("last_message_at", sevenDaysAgo.toISOString());
-      activeMembersCount = activeCount || 0;
-      
-      // Silent members (no message in last 14-30 days)
-      const fourteenDaysAgo = new Date();
-      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-      
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { count: silentCount } = await supabase
-        .from("member_activity")
-        .select("*", { count: "exact", head: true })
-        .eq("guild_id", community.guild_id)
-        .lt("last_message_at", fourteenDaysAgo.toISOString())
-        .gte("last_message_at", thirtyDaysAgo.toISOString());
-      silentMembersCount = silentCount || 0;
-      
-      // High risk members (no message in last 30+ days)
-      const { count: highRiskCount } = await supabase
-        .from("member_activity")
-        .select("*", { count: "exact", head: true })
-        .eq("guild_id", community.guild_id)
-        .lt("last_message_at", thirtyDaysAgo.toISOString());
-      highRiskMembersCount = highRiskCount || 0;
+      if (statsError) {
+        console.error('Error fetching member stats:', statsError);
+        // Fallback: get basic count only
+        const { count: memberCount } = await supabase
+          .from("member_activity")
+          .select("*", { count: "exact", head: true })
+          .eq("guild_id", community.guild_id);
+        totalMembersCount = memberCount || 0;
+      } else if (memberStats) {
+        totalMembersCount = memberStats.total || 0;
+        activeMembersCount = memberStats.active || 0;
+        silentMembersCount = memberStats.silent || 0;
+        highRiskMembersCount = memberStats.high_risk || 0;
+      }
     }
 
     return {

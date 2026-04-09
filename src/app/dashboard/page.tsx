@@ -147,6 +147,19 @@ export default function DashboardPage() {
     // Data loaded in useEffect above
   }, [searchParams]);
 
+  // Refresh data function
+  const refreshData = async () => {
+    setIsLoading(true);
+    const [statsRes, membersRes] = await Promise.all([
+      getDashboardStats(),
+      getAtRiskMembers()
+    ]);
+    setStats(statsRes);
+    setMembers(membersRes.data);
+    if (statsRes.hasServer) setServerSelected(true);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     async function loadData() {
       const supabase = createClient();
@@ -157,17 +170,8 @@ export default function DashboardPage() {
         return;
       }
       
-      // Store user ID for Discord OAuth
       setUserId(session.user.id);
-
-      const [statsRes, membersRes] = await Promise.all([
-        getDashboardStats(),
-        getAtRiskMembers()
-      ]);
-      setStats(statsRes);
-      setMembers(membersRes.data);
-      if (statsRes.hasServer) setServerSelected(true);
-      setIsLoading(false);
+      await refreshData();
     }
     loadData();
   }, []);
@@ -445,6 +449,24 @@ export default function DashboardPage() {
               <p className="text-3xl font-extrabold text-white">{stats.proDays}</p>
               <p className="text-xs text-slate-400 mt-1">Remaining</p>
             </div>
+          </div>
+
+          {/* Stats Header with Refresh */}
+          <div className="flex items-center justify-between bg-slate-800/50 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 text-sm">Real-time Member Stats</span>
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            </div>
+            <button
+              onClick={refreshData}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-sm transition-colors disabled:opacity-50"
+            >
+              <svg className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {isLoading ? 'Loading...' : 'Refresh'}
+            </button>
           </div>
 
           {/* Action Bar */}
