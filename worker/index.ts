@@ -1,3 +1,4 @@
+// IGone Worker - TypeScript enabled
 import { createClient } from '@supabase/supabase-js';
 
 interface Env {
