@@ -265,18 +265,7 @@ export async function getDashboardStats(): Promise<{
     const proDays = subscriptionStatus.daysLeft || 0;
     const isPro = subscriptionStatus.active;
 
-    // Fetch counts from churn_scores
-    const { count: highRiskCount } = await supabase
-      .from("churn_scores")
-      .select("*", { count: "exact", head: true })
-      .eq("risk_level", "HIGH_RISK");
-
-    const { count: moderateRiskCount } = await supabase
-      .from("churn_scores")
-      .select("*", { count: "exact", head: true })
-      .eq("risk_level", "SILENT");
-
-    // Check if user has connected a Discord server and get member count
+    // Check if user has connected a Discord server
     const { data: communities } = await supabase
       .from("communities")
       .select("id, guild_id, guild_name, member_count")
@@ -286,20 +275,59 @@ export async function getDashboardStats(): Promise<{
     const hasServer = !!(communities && communities.length > 0);
     const community = communities?.[0];
     
-    // Get total members from member_activity if community exists
+    // Get real member stats from member_activity
     let totalMembersCount = 0;
+    let activeMembersCount = 0;
+    let silentMembersCount = 0;
+    let highRiskMembersCount = 0;
+    
     if (community?.guild_id) {
+      // Total members
       const { count: memberCount } = await supabase
         .from("member_activity")
         .select("*", { count: "exact", head: true })
         .eq("guild_id", community.guild_id);
       totalMembersCount = memberCount || 0;
+      
+      // Active members (messaged in last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { count: activeCount } = await supabase
+        .from("member_activity")
+      .select("*", { count: "exact", head: true })
+        .eq("guild_id", community.guild_id)
+        .gte("last_message_at", sevenDaysAgo.toISOString());
+      activeMembersCount = activeCount || 0;
+      
+      // Silent members (no message in last 14-30 days)
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { count: silentCount } = await supabase
+        .from("member_activity")
+        .select("*", { count: "exact", head: true })
+        .eq("guild_id", community.guild_id)
+        .lt("last_message_at", fourteenDaysAgo.toISOString())
+        .gte("last_message_at", thirtyDaysAgo.toISOString());
+      silentMembersCount = silentCount || 0;
+      
+      // High risk members (no message in last 30+ days)
+      const { count: highRiskCount } = await supabase
+        .from("member_activity")
+        .select("*", { count: "exact", head: true })
+        .eq("guild_id", community.guild_id)
+        .lt("last_message_at", thirtyDaysAgo.toISOString());
+      highRiskMembersCount = highRiskCount || 0;
     }
 
     return {
-      highRisk: highRiskCount || 0,
-      silent: moderateRiskCount || 0,
-      active: totalMembersCount, // Use actual member count as active
+      highRisk: highRiskMembersCount,
+      silent: silentMembersCount,
+      active: activeMembersCount,
       proDays,
       isPro,
       hasServer,
@@ -307,11 +335,11 @@ export async function getDashboardStats(): Promise<{
       totalMembers: totalMembersCount,
       serverName: community?.guild_name || null,
       growthRate: 0,
-      engagementRate: 0,
+      engagementRate: totalMembersCount > 0 ? Math.round((activeMembersCount / totalMembersCount) * 100) : 0,
       weeklyActivity: [0,0,0,0,0],
       topPerformers: [],
       recentAlerts: [],
-      systemHealth: 'good',
+      systemHealth: highRiskMembersCount > 10 ? 'warning' : 'good',
       planName: subscriptionStatus.planName,
       billingCycle: subscriptionStatus.billingCycle,
       priceInr: subscriptionStatus.priceInr,
