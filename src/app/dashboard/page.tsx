@@ -34,6 +34,13 @@ export default function DashboardPage() {
     topPerformers: any[];
     recentAlerts: any[];
     systemHealth: 'excellent' | 'good' | 'warning' | 'critical';
+    // NEW: Multi-server stats
+    totalServers?: number;
+    maxServers?: number;
+    canAddMoreServers?: boolean;
+    usersSaved?: number;
+    membersRecovered?: number;
+    planTier?: string;
   }>({
     highRisk: 0,
     silent: 0,
@@ -49,7 +56,13 @@ export default function DashboardPage() {
     weeklyActivity: [],
     topPerformers: [],
     recentAlerts: [],
-    systemHealth: 'good'
+    systemHealth: 'good',
+    totalServers: 0,
+    maxServers: 2,
+    canAddMoreServers: false,
+    usersSaved: 0,
+    membersRecovered: 0,
+    planTier: 'starter'
   });
   
   const [members, setMembers] = useState<{
@@ -407,7 +420,7 @@ export default function DashboardPage() {
         /* Server Connected - Full Dashboard */
         <div className="space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
             <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-blue-400 text-sm font-semibold">Total Members</span>
@@ -451,6 +464,28 @@ export default function DashboardPage() {
               </div>
               <p className="text-3xl font-extrabold text-white">{stats.proDays}</p>
               <p className="text-xs text-slate-400 mt-1">Remaining</p>
+            </div>
+
+            {/* NEW: Servers Card */}
+            <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-purple-400 text-sm font-semibold">Servers</span>
+                <span className="text-2xl">🖥️</span>
+              </div>
+              <p className="text-3xl font-extrabold text-white">{stats.totalServers} / {stats.maxServers}</p>
+              <p className="text-xs text-slate-400 mt-1">
+                {stats.canAddMoreServers ? 'Can add more' : 'Max reached'}
+              </p>
+            </div>
+
+            {/* NEW: Users Saved Card */}
+            <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-pink-400 text-sm font-semibold">Users Saved</span>
+                <span className="text-2xl">💝</span>
+              </div>
+              <p className="text-3xl font-extrabold text-white">{stats.usersSaved || 0}</p>
+              <p className="text-xs text-slate-400 mt-1">By your app</p>
             </div>
           </div>
 

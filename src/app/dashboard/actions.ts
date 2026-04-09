@@ -243,8 +243,6 @@ export async function getDashboardStats(): Promise<{
     }
     
     const supabase = await createClient();
-
-    // Fetch current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return { 
@@ -270,68 +268,57 @@ export async function getDashboardStats(): Promise<{
       };
     }
 
-    // Get subscription status using Supabase function
+    // Get subscription status
     const subscriptionStatus = await getUserSubscriptionStatus(user.id);
     const proDays = subscriptionStatus.daysLeft || 0;
     const isPro = subscriptionStatus.active;
 
-    // Check if user has connected a Discord server
+    // Get aggregated stats (NO Discord IDs exposed)
+    const { data: aggStats, error: aggError } = await supabase
+      .rpc('get_user_dashboard_stats', { p_user_id: user.id });
+    
+    if (aggError) {
+      console.error('Error fetching aggregated stats:', aggError);
+    }
+    
+    const stats = aggStats || {};
+    
+    // Check if user has connected servers
     const { data: communities } = await supabase
       .from("communities")
-      .select("id, guild_id, guild_name, member_count")
-      .eq("user_id", user.id)
-      .limit(1);
+      .select("guild_id, guild_name, member_count")
+      .eq("user_id", user.id);
     
     const hasServer = !!(communities && communities.length > 0);
-    const community = communities?.[0];
-    
-    // Get real member stats from member_activity - SINGLE QUERY for speed
-    let totalMembersCount = 0;
-    let activeMembersCount = 0;
-    let silentMembersCount = 0;
-    let highRiskMembersCount = 0;
-    
-    if (community?.guild_id) {
-      // Use single RPC call for all stats (much faster!)
-      const { data: memberStats, error: statsError } = await supabase
-        .rpc('get_dashboard_member_stats', { p_guild_id: community.guild_id });
-      
-      if (statsError) {
-        console.error('Error fetching member stats:', statsError);
-        // Fallback: get basic count only
-        const { count: memberCount } = await supabase
-          .from("member_activity")
-          .select("*", { count: "exact", head: true })
-          .eq("guild_id", community.guild_id);
-        totalMembersCount = memberCount || 0;
-      } else if (memberStats) {
-        totalMembersCount = memberStats.total || 0;
-        activeMembersCount = memberStats.active || 0;
-        silentMembersCount = memberStats.silent || 0;
-        highRiskMembersCount = memberStats.high_risk || 0;
-      }
-    }
+    const mainCommunity = communities?.[0];
 
     const result = {
-      highRisk: highRiskMembersCount,
-      silent: silentMembersCount,
-      active: activeMembersCount,
+      highRisk: stats.high_risk_members || 0,
+      silent: stats.silent_members || 0,
+      active: stats.active_members || 0,
       proDays,
       isPro,
       hasServer,
       userEmail: user.email || undefined,
-      totalMembers: totalMembersCount,
-      serverName: community?.guild_name || null,
+      totalMembers: stats.total_members || 0,
+      serverName: mainCommunity?.guild_name || null,
       growthRate: 0,
-      engagementRate: totalMembersCount > 0 ? Math.round((activeMembersCount / totalMembersCount) * 100) : 0,
+      engagementRate: stats.engagement_rate || 0,
       weeklyActivity: [0,0,0,0,0],
       topPerformers: [],
       recentAlerts: [],
-      systemHealth: (highRiskMembersCount > 10 ? 'warning' : 'good') as 'excellent' | 'good' | 'warning' | 'critical',
+      systemHealth: ((stats.high_risk_members || 0) > 10 ? 'warning' : 'good') as 'excellent' | 'good' | 'warning' | 'critical',
       planName: subscriptionStatus.planName,
       billingCycle: subscriptionStatus.billingCycle,
       priceInr: subscriptionStatus.priceInr,
-      endsAt: subscriptionStatus.endsAt
+      endsAt: subscriptionStatus.endsAt,
+      // NEW: Multi-server info
+      totalServers: stats.total_servers || 0,
+      maxServers: stats.max_servers || 2,
+      canAddMoreServers: stats.can_add_more || false,
+      usersSaved: stats.users_saved || 0,
+      membersRecovered: stats.members_recovered || 0,
+      planTier: stats.plan_tier || 'starter'
     };
     
     // Save to cache
