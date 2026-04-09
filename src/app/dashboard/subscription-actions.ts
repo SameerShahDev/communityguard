@@ -610,11 +610,11 @@ export function calculateProration(
   };
 }
 
-export function getPlanDetails(planId: PlanId) {
+export async function getPlanDetails(planId: PlanId) {
   return SUBSCRIPTION_PLANS[planId];
 }
 
-export function getAllPlans() {
+export async function getAllPlans() {
   return Object.values(SUBSCRIPTION_PLANS);
 }
 
