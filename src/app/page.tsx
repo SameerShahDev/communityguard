@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -23,12 +24,12 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0c0e12]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)] transition-transform hover:scale-105">
-                <span className="text-white font-bold text-xl">C</span>
+          <Link href="/" className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(88,101,242,0.4)] transition-transform hover:scale-105">
+                <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
              </div>
-             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Cigone</span>
-          </div>
+             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">IGone</span>
+          </Link>
           
           <div className="hidden md:flex items-center gap-10">
             <Link href="#features" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Features</Link>
@@ -177,12 +178,12 @@ export default function LandingPage() {
               <div className="grid md:grid-cols-4 gap-8 mb-12">
                  {/* Brand */}
                  <div className="md:col-span-1">
-                    <div className="flex items-center gap-3 mb-4">
-                       <div className="w-10 h-10 rounded-lg bg-[#5865F2] flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">C</span>
+                    <Link href="/" className="flex items-center gap-3 mb-4">
+                       <div className="w-10 h-10 rounded-lg overflow-hidden">
+                          <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
                        </div>
-                       <span className="text-lg font-bold text-white">Cigone</span>
-                    </div>
+                       <span className="text-lg font-bold text-white">IGone</span>
+                    </Link>
                     <p className="text-slate-500 text-sm mb-4">AI-powered Discord community management platform.</p>
                     <p className="text-slate-400 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
                  </div>
@@ -224,7 +225,7 @@ export default function LandingPage() {
 
               {/* Bottom Bar */}
               <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                 <p className="text-slate-500 text-sm">&copy; 2025 Cigone.ai All rights reserved.</p>
+                 <p className="text-slate-500 text-sm">&copy; 2025 IGone.ai All rights reserved.</p>
                  <p className="text-slate-500 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
               </div>
            </div>
