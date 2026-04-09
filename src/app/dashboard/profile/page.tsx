@@ -5,6 +5,7 @@ export const runtime = 'edge';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PaymentButton } from '@/app/components/PaymentButton';
+import { SubscriptionManager } from '@/app/components/SubscriptionManager';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -85,46 +86,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Subscription */}
+        {/* Subscription - Advanced Manager */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Subscription</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${user?.pro_days_left > 0 ? 'bg-emerald-400' : 'bg-amber-400'}`}></div>
-                <div>
-                  <p className="text-white font-semibold">
-                    {user?.pro_days_left > 0 ? 'Igone Pro' : 'Free Plan'}
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    {user?.pro_days_left > 0 ? `${user.pro_days_left} days remaining` : 'Basic features only'}
-                  </p>
-                </div>
-              </div>
-              {user?.pro_days_left > 0 ? (
-                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm font-semibold rounded-full">
-                  Active
-                </span>
-              ) : (
-                <PaymentButton 
-                  userId={user?.id} 
-                  isPro={false}
-                  variant="primary"
-                  size="sm"
-                />
-              )}
-            </div>
-
-            {user?.pro_days_left > 0 && (
-              <PaymentButton 
-                userId={user?.id} 
-                isPro={true}
-                variant="secondary"
-                size="sm"
-                className="w-full"
-              />
-            )}
-          </div>
+          <h2 className="text-lg font-semibold text-white mb-4">Subscription Management</h2>
+          <SubscriptionManager userId={user?.id} />
         </div>
 
         {/* Referral Code */}
