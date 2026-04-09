@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, Phone } from 'lucide-react';
 
 export const metadata = {
@@ -12,8 +13,8 @@ export default function ContactPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">C</span>
+            <div className="w-12 h-12 rounded-xl overflow-hidden">
+              <Image src="/icon.jpeg" alt="IGone Logo" width={48} height={48} className="w-full h-full object-cover" />
             </div>
             <span className="text-white font-bold text-xl">Igone</span>
           </Link>

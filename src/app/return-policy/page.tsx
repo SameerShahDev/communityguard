@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata = {
-  title: 'Return Policy - Cigone',
-  description: 'Return Policy for Cigone AI-powered Discord community management platform.',
+  title: 'Return Policy - IGone',
+  description: 'Return Policy for IGone AI-powered Discord community management platform.',
 };
 
 export default function ReturnPolicyPage() {
@@ -15,10 +16,10 @@ export default function ReturnPolicyPage() {
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 hover:scale-105 transition-transform mb-6">
-            <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">C</span>
+            <div className="w-12 h-12 rounded-xl overflow-hidden">
+              <Image src="/icon.jpeg" alt="IGone Logo" width={48} height={48} className="w-full h-full object-cover" />
             </div>
-            <span className="text-white font-bold text-xl">Cigone</span>
+            <span className="text-white font-bold text-xl">IGone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Return Policy

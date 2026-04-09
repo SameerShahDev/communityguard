@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 
 // 🔥 STOP! Console Security Warning + Branding for Sameer Shah
@@ -16,7 +17,7 @@ you're likely being SCAMMED!%c
 
 %cThis is a secure authentication system.%c
 %cCreated by: @sameershahdev%c
-%cCommunityGuard - Protecting Discord Communities%c
+%cIGone - Protecting Discord Communities%c
 `;
 
 function LoginContent() {
@@ -106,8 +107,8 @@ function LoginContent() {
         {/* Logo */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 hover:scale-105 transition-transform">
-            <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)]">
-              <span className="text-white font-bold text-xl">C</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(88,101,242,0.4)]">
+              <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
             </div>
           </Link>
           <h2 className="text-3xl font-extrabold text-white tracking-tight mt-4 mb-2">

@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata = {
-  title: 'Privacy Policy - CommunityGuard',
-  description: 'Privacy Policy for CommunityGuard AI-powered Discord community management platform.',
+  title: 'Privacy Policy - IGone',
+  description: 'Privacy Policy for IGone AI-powered Discord community management platform.',
 };
 
 export default function PrivacyPage() {
@@ -18,10 +19,10 @@ export default function PrivacyPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 hover:scale-105 transition-transform mb-6">
-            <div className="w-12 h-12 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)]">
-              <span className="text-white font-bold text-2xl">C</span>
+            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(88,101,242,0.4)]">
+              <Image src="/icon.jpeg" alt="IGone Logo" width={48} height={48} className="w-full h-full object-cover" />
             </div>
-            <span className="text-white font-bold text-xl">CommunityGuard</span>
+            <span className="text-white font-bold text-xl">IGone</span>
           </Link>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mt-6 mb-4">
             Privacy Policy
