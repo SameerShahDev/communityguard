@@ -1,22 +1,39 @@
+// IGone Worker - TypeScript enabled
 import { createClient } from '@supabase/supabase-js';
 
+interface Env {
+  SUPABASE_URL: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+}
+
+interface ScheduledEvent {
+  type: 'scheduled';
+  cron: string;
+  scheduledTime: number;
+}
+
+interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+  passThroughOnException(): void;
+}
+
 export default {
-  async scheduled(event, env, ctx) {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Fetch all member activity
+    // 1. Fetch all member activity with IDs for FK relationship
     const { data: activities, error: fetchError } = await supabase
       .from('member_activity')
-      .select('community_id, discord_id, last_seen');
+      .select('id, guild_id, discord_id, last_message_at, username');
 
-    if (fetchError) {
+    if (fetchError || !activities) {
       console.error('Error fetching activity:', fetchError);
       return;
     }
 
     const now = new Date();
     const scoresToUpsert = activities.map(activity => {
-      const lastSeen = new Date(activity.last_seen);
+      const lastSeen = new Date(activity.last_message_at);
       const diffInMs = now.getTime() - lastSeen.getTime();
       const daysSilent = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
       
@@ -24,15 +41,16 @@ export default {
       let score = (daysSilent * 3) + 50;
       if (score > 100) score = 100;
 
-      let riskLevel = 'ACTIVE';
-      if (score > 80) riskLevel = 'CRITICAL';
-      else if (score >= 42) riskLevel = 'SILENT';
+      // Risk Levels based on new enum: ACTIVE, SILENT, HIGH_RISK
+      let riskLevel: 'ACTIVE' | 'SILENT' | 'HIGH_RISK' = 'ACTIVE';
+      if (score > 80) riskLevel = 'HIGH_RISK';
+      else if (score >= 65) riskLevel = 'SILENT';
 
       return {
-        member_id: activity.discord_id,
-        community_id: activity.community_id,
+        member_id: activity.id, // FK to member_activity.id
         score: score,
         risk_level: riskLevel,
+        member_name: activity.username,
         updated_at: now.toISOString()
       };
     });
@@ -41,7 +59,7 @@ export default {
     if (scoresToUpsert.length > 0) {
       const { error: upsertError } = await supabase
         .from('churn_scores')
-        .upsert(scoresToUpsert, { onConflict: 'member_id, community_id' });
+        .upsert(scoresToUpsert, { onConflict: 'member_id' });
 
       if (upsertError) {
         console.error('Error upserting scores:', upsertError);
@@ -51,19 +69,23 @@ export default {
     }
   },
 
-  // Also allow manual trigger via fetch if needed
-  async fetch(request, env, ctx) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     if (request.method === 'POST') {
-      await this.scheduled(null, env, ctx);
+      const mockEvent: ScheduledEvent = {
+        type: 'scheduled',
+        cron: 'manual',
+        scheduledTime: Date.now()
+      };
+      await this.scheduled(mockEvent, env, ctx);
       return new Response('Churn calculation triggered manually.', { status: 200 });
     }
-    return new Response('CommunityGuard Churn Worker', { status: 200 });
+    return new Response('IGone Churn Worker - Active', { status: 200 });
   }
 };
 
 /*
 WRANGLER CONFIG (wrangler.toml):
-name = "communityguard-churn-worker"
+name = "igone-churn-worker"
 main = "index.ts"
 compatibility_date = "2024-01-01"
 

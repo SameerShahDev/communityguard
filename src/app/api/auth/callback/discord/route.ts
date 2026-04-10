@@ -1,24 +1,90 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createEdgeClient, createServiceClient } from '@/lib/supabase/edge';
+
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.vercel.app';
 
 export async function GET(req: Request) {
-  const { searchParams, origin } = new URL(req.url);
+  const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
   const guildId = searchParams.get('guild_id');
+  const state = searchParams.get('state');
+
+  console.log('Discord callback received:', { code: code ? 'present' : 'missing', guildId, state: state ? 'present' : 'missing' });
 
   if (!code || !guildId) {
-    return NextResponse.redirect(`${origin}/dashboard?error=missing_params`);
+    console.error('Missing params:', { code, guildId });
+    return NextResponse.redirect(`${SITE_URL}/dashboard?error=missing_params`);
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.redirect(`${origin}/login?error=unauthorized`);
+  // Use service client to bypass RLS
+  let supabase;
+  try {
+    supabase = createServiceClient();
+    console.log('Using service role client');
+  } catch (e) {
+    console.error('Service client failed, falling back to edge client:', e);
+    supabase = createEdgeClient();
+  }
+  
+  // Extract user_id from state parameter (primary method)
+  let userId = '';
+  if (state) {
+    try {
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+      userId = stateData.userId;
+      console.log('User ID extracted from state:', userId);
+    } catch (e) {
+      console.error('Failed to parse state:', e);
+    }
+  }
+  
+  // Fallback: Get user from cookies if state didn't work
+  if (!userId) {
+    const cookieHeader = req.headers.get('cookie');
+    console.log('Fallback: Cookie header present:', !!cookieHeader);
+    
+    if (cookieHeader) {
+      const patterns = [
+        /sb-access-token=([^;]+)/,
+        /sb-[^-]+-auth-token=([^;]+)/,
+        /supabase-auth-token=([^;]+)/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = cookieHeader.match(pattern);
+        if (match) {
+          try {
+            const token = match[1];
+            const userRes = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+              }
+            });
+            
+            if (userRes.ok) {
+              const userData = await userRes.json();
+              userId = userData.id;
+              console.log('User ID from cookie:', userId);
+              break;
+            }
+          } catch (e) {
+            console.error('Cookie auth failed:', e);
+          }
+        }
+      }
+    }
   }
 
+  if (!userId) {
+    console.error('Could not get user ID from state or cookies');
+    return NextResponse.redirect(`${SITE_URL}/dashboard?error=auth_required`);
+  }
+  
   // Use the guildId to create a community record for the user
-  // We'll fetch the server name via Discord API if possible, or use a placeholder
   const discordToken = process.env.DISCORD_BOT_TOKEN;
   
   let serverName = "Connected Server";
@@ -29,23 +95,58 @@ export async function GET(req: Request) {
     if (guildRes.ok) {
         const guildData = await guildRes.json();
         serverName = guildData.name;
+    } else {
+        console.log('Guild fetch failed, using default name');
     }
   } catch (e) {
     console.error("Failed to fetch guild name", e);
   }
 
-  const { error } = await supabase
-    .from('communities')
-    .upsert({
-      user_id: user.id,
-      discord_server_id: guildId,
-      name: serverName
-    }, { onConflict: 'discord_server_id' });
+  console.log('Attempting to save community:', { userId, guildId, serverName });
 
-  if (error) {
-    console.error("Error saving community", error);
-    return NextResponse.redirect(`${origin}/dashboard?error=db_save_failed`);
+  // First check if community already exists
+  const { data: existing } = await supabase
+    .from('communities')
+    .select('id')
+    .eq('guild_id', guildId)
+    .single();
+
+  let result;
+  if (existing) {
+    // Update existing
+    result = await supabase
+      .from('communities')
+      .update({
+        user_id: userId,
+        guild_name: serverName,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('guild_id', guildId)
+      .select();
+  } else {
+    // Insert new
+    result = await supabase
+      .from('communities')
+      .insert({
+        user_id: userId,
+        guild_id: guildId,
+        guild_name: serverName,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select();
   }
 
-  return NextResponse.redirect(`${origin}/dashboard?success=server_connected`);
+  const { data, error } = result;
+
+  if (error) {
+    console.error("Error saving community:", error);
+    console.error("Error details:", JSON.stringify(error));
+    return NextResponse.redirect(`${SITE_URL}/dashboard?error=db_save_failed&message=${encodeURIComponent(error.message)}`);
+  }
+
+  console.log('Community saved successfully:', data);
+  return NextResponse.redirect(`${SITE_URL}/dashboard?success=server_connected`);
 }

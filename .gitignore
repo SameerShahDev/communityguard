@@ -19,6 +19,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -35,6 +36,10 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# webhook (deployed separately to reduce bundle size)
+/webhook/
+/worker/
 
 # typescript
 *.tsbuildinfo

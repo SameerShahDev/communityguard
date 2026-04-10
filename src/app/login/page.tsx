@@ -1,21 +1,99 @@
 "use client";
 
-import { useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 
-export default function LoginPage() {
+// 🔥 STOP! Console Security Warning + Branding for Sameer Shah
+const CONSOLE_ART = `
+%c🛑 STOP! 🛑%c
+
+%cIf someone told you to copy/paste something here,
+you're likely being SCAMMED!%c
+
+%cThis is a secure authentication system.%c
+%cCreated by: @sameershahdev%c
+%cIGone - Protecting Discord Communities%c
+`;
+
+function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    // 🎨 Show security warning + branding in console
+    console.log(
+      CONSOLE_ART,
+      'color: #ff0000; font-size: 24px; font-weight: bold; background: #ffff00; padding: 4px; border-radius: 4px;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #ff0000; font-size: 16px; font-weight: bold;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #7289DA; font-size: 14px; font-style: italic;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #43b581; font-size: 14px; font-weight: bold;',
+      'color: #5865F2; font-size: 14px;',
+      'color: #5865F2; font-size: 12px;'
+    );
+    
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      const errorMessages: Record<string, string> = {
+        'auth_failed': 'Authentication failed. Please try again.',
+        'no_code': 'Authorization code missing. Please try logging in again.',
+        'no_state': 'State parameter missing. Please try logging in again.',
+        'no_code_verifier': 'Code verifier missing. Please try logging in again.',
+        'no_user': 'User information not received from Discord.',
+        'token_exchange_failed': 'Failed to exchange token. Please try again.',
+        'invalid_token_response': 'Invalid response from authentication server.',
+        'auth_exception': 'An unexpected error occurred during authentication.',
+        'session_failed': 'Failed to create session. Please try again.',
+        'missing_api_key': 'API key missing. Check environment configuration.',
+      };
+      setError(errorMessages[errorParam] || 'Authentication failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleDiscordLogin = async () => {
     setIsLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-      },
-    });
+    setError(null);
+    
+    try {
+      // Use fixed SITE_URL to ensure consistent redirects
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://igone.pages.dev';
+      
+      console.log('🚀 [SameerShahDev] Using Supabase built-in Discord OAuth');
+      
+      // Use Supabase built-in OAuth instead of manual PKCE
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
+        },
+      });
+      
+      if (error) {
+        console.error('❌ [SameerShahDev] Supabase OAuth error:', error);
+        setError('Failed to connect to Discord. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data.url) {
+        console.log('🚀 [SameerShahDev] Redirecting to Discord OAuth');
+        window.location.href = data.url;
+      }
+      
+    } catch (error) {
+      console.error('❌ [SameerShahDev] OAuth error:', error);
+      setError('Failed to initiate Discord login. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -29,8 +107,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 hover:scale-105 transition-transform">
-            <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)]">
-              <span className="text-white font-bold text-xl">C</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(88,101,242,0.4)]">
+              <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
             </div>
           </Link>
           <h2 className="text-3xl font-extrabold text-white tracking-tight mt-4 mb-2">
@@ -40,6 +118,13 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-[#111318] border border-white/5 rounded-3xl p-8 shadow-2xl">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Discord OAuth */}
           <button
             onClick={handleDiscordLogin}
@@ -79,11 +164,23 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-xs text-slate-600">
           By continuing, you agree to our{' '}
-          <Link href="#" className="underline hover:text-slate-400 transition-colors">Terms</Link>
+          <Link href="/terms" className="underline hover:text-slate-400 transition-colors">Terms</Link>
           {' '}and{' '}
-          <Link href="#" className="underline hover:text-slate-400 transition-colors">Privacy Policy</Link>.
+          <Link href="/privacy" className="underline hover:text-slate-400 transition-colors">Privacy Policy</Link>.
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#0c0e12]">
+        <div className="animate-spin h-8 w-8 border-2 border-[#5865F2] border-t-transparent rounded-full" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -21,12 +24,12 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0c0e12]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)] transition-transform hover:scale-105">
-                <span className="text-white font-bold text-xl">C</span>
+          <Link href="/" className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(88,101,242,0.4)] transition-transform hover:scale-105">
+                <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
              </div>
-             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">CommunityGuard</span>
-          </div>
+             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">IGone</span>
+          </Link>
           
           <div className="hidden md:flex items-center gap-10">
             <Link href="#features" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Features</Link>
@@ -112,7 +115,7 @@ export default function LandingPage() {
               <div className="p-8 rounded-3xl bg-[#111318] border border-white/5 hover:border-[#5865F2]/50 transition-colors group">
                  <div className="w-12 h-12 rounded-xl bg-[#5865F2]/20 text-[#5865F2] flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🛡️</div>
                  <h3 className="text-xl font-bold mb-3 text-white">Revenue Protection</h3>
-                 <p className="text-slate-400 leading-relaxed">Every member saved is revenue retained. CommunityGuard pays for itself by reducing community churn by up to 40%.</p>
+                 <p className="text-slate-400 leading-relaxed">Every member saved is revenue retained. Cigone pays for itself by reducing community churn by up to 40%.</p>
               </div>
            </div>
         </section>
@@ -169,19 +172,61 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="py-20 border-t border-white/5 bg-[#0c0e12]">
-           <div className="max-w-7xl mx-auto px-4 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-lg bg-[#5865F2] flex items-center justify-center">
-                    <span className="text-white font-bold">C</span>
+        <footer className="py-16 border-t border-white/5 bg-[#0c0e12]">
+           <div className="max-w-7xl mx-auto px-4">
+              {/* Main Footer Content */}
+              <div className="grid md:grid-cols-4 gap-8 mb-12">
+                 {/* Brand */}
+                 <div className="md:col-span-1">
+                    <Link href="/" className="flex items-center gap-3 mb-4">
+                       <div className="w-10 h-10 rounded-lg overflow-hidden">
+                          <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
+                       </div>
+                       <span className="text-lg font-bold text-white">IGone</span>
+                    </Link>
+                    <p className="text-slate-500 text-sm mb-4">AI-powered Discord community management platform.</p>
+                    <p className="text-slate-400 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
                  </div>
-                 <span className="text-lg font-bold">CommunityGuard</span>
+
+                 {/* Quick Links */}
+                 <div>
+                    <h4 className="text-white font-semibold mb-4">Legal</h4>
+                    <ul className="space-y-2 text-sm">
+                       <li><Link href="/terms" className="text-slate-400 hover:text-white transition-colors">Terms & Conditions</Link></li>
+                       <li><Link href="/privacy" className="text-slate-400 hover:text-white transition-colors">Privacy Policy</Link></li>
+                       <li><Link href="/refund-policy" className="text-slate-400 hover:text-white transition-colors">Refund Policy</Link></li>
+                       <li><Link href="/cancellation-policy" className="text-slate-400 hover:text-white transition-colors">Cancellation Policy</Link></li>
+                       <li><Link href="/return-policy" className="text-slate-400 hover:text-white transition-colors">Return Policy</Link></li>
+                       <li><Link href="/replacement-policy" className="text-slate-400 hover:text-white transition-colors">Replacement Policy</Link></li>
+                    </ul>
+                 </div>
+
+                 {/* Contact */}
+                 <div>
+                    <h4 className="text-white font-semibold mb-4">Contact</h4>
+                    <ul className="space-y-2 text-sm text-slate-400">
+                       <li><a href="mailto:sahanapraveen2006@gmail.com" className="hover:text-[#5865F2] transition-colors">sahanapraveen2006@gmail.com</a></li>
+                       <li><a href="tel:+917321086174" className="hover:text-[#5865F2] transition-colors">+91 73210 86174</a></li>
+                       <li><Link href="/contact" className="hover:text-[#5865F2] transition-colors">Contact Us</Link></li>
+                    </ul>
+                 </div>
+
+                 {/* Social */}
+                 <div>
+                    <h4 className="text-white font-semibold mb-4">Follow Us</h4>
+                    <div className="flex gap-4">
+                       <a href="https://www.instagram.com/sameershahdev/" target="_blank" rel="noopener" className="text-slate-400 hover:text-pink-500 transition-colors">Instagram</a>
+                       <a href="https://www.linkedin.com/in/sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-500 transition-colors">LinkedIn</a>
+                       <a href="https://www.facebook.com/Sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-blue-600 transition-colors">Facebook</a>
+                       <a href="https://youtube.com/@sameershahdev" target="_blank" rel="noopener" className="text-slate-400 hover:text-red-500 transition-colors">YouTube</a>
+                    </div>
+                 </div>
               </div>
-              <p className="text-slate-500 text-sm">&copy; 2025 CommunityGuard.ai All rights reserved.</p>
-              <div className="flex gap-8 text-sm font-semibold text-slate-400">
-                 <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                 <Link href="#" className="hover:text-white transition-colors">Terms</Link>
-                 <Link href="#" className="hover:text-white transition-colors">Discord</Link>
+
+              {/* Bottom Bar */}
+              <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                 <p className="text-slate-500 text-sm">&copy; 2025 IGone.ai All rights reserved.</p>
+                 <p className="text-slate-500 text-sm">CEO: <span className="text-[#5865F2] font-semibold">SAHANA PRAVEEN</span></p>
               </div>
            </div>
         </footer>

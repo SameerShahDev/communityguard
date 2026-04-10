@@ -1,7 +1,10 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -54,10 +57,10 @@ export default function OnboardingPage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 hover:scale-105 transition-transform">
-            <div className="w-10 h-10 rounded-xl bg-[#5865F2] flex items-center justify-center shadow-[0_0_20px_rgba(88,101,242,0.4)]">
-              <span className="text-white font-bold text-xl">C</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(88,101,242,0.4)]">
+              <Image src="/icon.jpeg" alt="IGone Logo" width={40} height={40} className="w-full h-full object-cover" />
             </div>
-            <span className="text-xl font-bold tracking-tight">CommunityGuard</span>
+            <span className="text-xl font-bold tracking-tight">IGone</span>
           </Link>
         </div>
 
@@ -102,7 +105,7 @@ export default function OnboardingPage() {
           )}
 
           <p className="text-slate-400 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-            Invite the CommunityGuard bot to your server. It will silently track member activity and alert you before people leave.
+            Invite the Cigone bot to your server. It will silently track member activity and alert you before people leave.
           </p>
 
           {/* How it works */}

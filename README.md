@@ -1,4 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IGone - AI-Powered Discord Community Management
+
+Built with ❤️ by Sameer Shah (@sameershahdev)
+
+## About
+IGone is an AI-powered Discord community management platform that helps server owners track member engagement, identify at-risk members, and prevent churn through automated recovery emails.
+
+## Features
+- 🤖 Discord Bot Integration
+- 📊 Member Activity Analytics
+- ⚠️ Churn Risk Detection
+- 📧 Automated Recovery Emails
+- 💳 Subscription Management (Cashfree)
+
+## Tech Stack
+- Next.js 16
+- TypeScript
+- Tailwind CSS
+- Supabase
+- Edge Runtime
 
 ## Getting Started
 
